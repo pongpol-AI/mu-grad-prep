@@ -3156,6 +3156,18 @@
                 if (mode === 'review') {
                     // Show full explanation
                     html += `<p class="grammar-text">${item.sentence}</p>`;
+                    html += `<div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:15px;">`;
+                    item.options.forEach(opt => {
+                        let btnClass = 'option';
+                        if (opt.letter === item.answer) btnClass += ' correct';
+                        html += `
+                            <div class="${btnClass}" style="flex: 1; min-width: 45%; cursor: default;">
+                                <div class="option-letter">${opt.letter}</div>
+                                <div>${opt.text}</div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
                     html += renderGrammarInsight(item);
                 } else {
                     html += `<p class="grammar-text">${item.sentence}</p>`;
