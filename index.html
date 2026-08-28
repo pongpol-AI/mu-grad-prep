@@ -2770,6 +2770,7 @@
                 if (subject === 'reading') renderReading();
                 if (subject === 'grammar') renderGrammar();
                 if (subject === 'writing') renderWriting();
+                requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
             }
         }
         
@@ -2781,6 +2782,7 @@
                 if (subject === 'reading') renderReading();
                 if (subject === 'grammar') renderGrammar();
                 if (subject === 'writing') renderWriting();
+                requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
             }
         }
 
