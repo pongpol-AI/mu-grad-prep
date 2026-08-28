@@ -2748,6 +2748,14 @@
             window.scrollTo(0, 0);
         }
         
+        function scrollToSubjectTop(subject) {
+            const card = document.querySelector(`#tab-${subject} .glass-card`);
+            if (!card) return;
+            const headerOffset = 16;
+            const top = card.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+        
         function setMode(subject, mode) {
             state[subject].mode = mode;
             
@@ -2770,7 +2778,7 @@
                 if (subject === 'reading') renderReading();
                 if (subject === 'grammar') renderGrammar();
                 if (subject === 'writing') renderWriting();
-                requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+                requestAnimationFrame(() => scrollToSubjectTop(subject));
             }
         }
         
@@ -2782,7 +2790,7 @@
                 if (subject === 'reading') renderReading();
                 if (subject === 'grammar') renderGrammar();
                 if (subject === 'writing') renderWriting();
-                requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+                requestAnimationFrame(() => scrollToSubjectTop(subject));
             }
         }
 
