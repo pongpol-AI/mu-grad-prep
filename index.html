@@ -142,6 +142,52 @@
             margin: 0;
         }
 
+        .header-brand {
+            padding: 6px 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 38px;
+            padding: 8px 12px;
+            color: var(--text-main);
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            border-radius: 8px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .header-home:hover {
+            background: rgba(59, 130, 246, 0.22);
+            border-color: var(--primary);
+        }
+
+        .header-home svg {
+            width: 17px;
+            height: 17px;
+            fill: currentColor;
+        }
+
+        @media (max-width: 480px) {
+            .header-home span { display: none; }
+            .header-home { width: 38px; padding: 8px; justify-content: center; }
+        }
+
         .version-badge {
             font-size: 10px;
             padding: 4px 8px;
@@ -696,8 +742,16 @@
 
     <!-- Header -->
     <header class="header">
-        <h1>MU GRAD Prep</h1>
-        <div class="version-badge">v1.0</div>
+        <button class="header-brand" type="button" onclick="switchTab('dashboard')" aria-label="Go to home">
+            <h1>MU GRAD Prep</h1>
+        </button>
+        <div class="header-actions">
+            <button class="header-home" type="button" onclick="switchTab('dashboard')" aria-label="Go to home">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3L12 3z"/></svg>
+                <span>Home</span>
+            </button>
+            <div class="version-badge">v1.0</div>
+        </div>
     </header>
 
     <!-- Main Container -->
