@@ -252,6 +252,40 @@
             color: var(--text-main);
         }
 
+        .item-pager {
+            display: grid;
+            grid-template-columns: minmax(120px, 1fr) minmax(220px, 1.25fr) minmax(120px, 1fr);
+            gap: 12px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .item-pager .btn { width: 100%; }
+
+        .page-select {
+            width: 100%;
+            min-width: 0;
+            height: 48px;
+            padding: 0 38px 0 14px;
+            color: var(--text-main);
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .page-select option { color: #0f172a; background: #ffffff; }
+
+        @media (max-width: 640px) {
+            .item-pager { grid-template-columns: 1fr 1fr; }
+            .item-pager .page-select {
+                grid-column: 1 / -1;
+                grid-row: 1;
+            }
+        }
+
         /* Mode Selector */
         .mode-selector {
             display: flex;
@@ -720,9 +754,10 @@
                 
                 <div id="listening-container"></div>
                 
-                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                    <button class="btn btn-outline" style="width: 48%;" onclick="prevItem('listening')">Previous</button>
-                    <button class="btn" style="width: 48%;" onclick="nextItem('listening')">Next</button>
+                <div class="item-pager">
+                    <button class="btn btn-outline" onclick="prevItem('listening')">Previous</button>
+                    <select class="page-select" id="listening-page-select" aria-label="Choose listening set" onchange="goToItem('listening', this.value)"></select>
+                    <button class="btn" onclick="nextItem('listening')">Next</button>
                 </div>
             </div>
         </div>
@@ -738,9 +773,10 @@
                 
                 <div id="reading-container"></div>
                 
-                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                    <button class="btn btn-outline" style="width: 48%;" onclick="prevItem('reading')">Previous</button>
-                    <button class="btn" style="width: 48%;" onclick="nextItem('reading')">Next</button>
+                <div class="item-pager">
+                    <button class="btn btn-outline" onclick="prevItem('reading')">Previous</button>
+                    <select class="page-select" id="reading-page-select" aria-label="Choose reading passage" onchange="goToItem('reading', this.value)"></select>
+                    <button class="btn" onclick="nextItem('reading')">Next</button>
                 </div>
             </div>
         </div>
@@ -756,9 +792,10 @@
                 
                 <div id="grammar-container"></div>
                 
-                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                    <button class="btn btn-outline" style="width: 48%;" onclick="prevItem('grammar')">Previous</button>
-                    <button class="btn" style="width: 48%;" onclick="nextItem('grammar')">Next</button>
+                <div class="item-pager">
+                    <button class="btn btn-outline" onclick="prevItem('grammar')">Previous</button>
+                    <select class="page-select" id="grammar-page-select" aria-label="Choose grammar question" onchange="goToItem('grammar', this.value)"></select>
+                    <button class="btn" onclick="nextItem('grammar')">Next</button>
                 </div>
             </div>
         </div>
@@ -774,9 +811,10 @@
                 
                 <div id="writing-container"></div>
                 
-                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                    <button class="btn btn-outline" style="width: 48%;" onclick="prevItem('writing')">Previous</button>
-                    <button class="btn" style="width: 48%;" onclick="nextItem('writing')">Next</button>
+                <div class="item-pager">
+                    <button class="btn btn-outline" onclick="prevItem('writing')">Previous</button>
+                    <select class="page-select" id="writing-page-select" aria-label="Choose writing topic" onchange="goToItem('writing', this.value)"></select>
+                    <button class="btn" onclick="nextItem('writing')">Next</button>
                 </div>
             </div>
         </div>
@@ -8304,6 +8342,7 @@
             renderReading();
             renderGrammar();
             renderWriting();
+            initPageSelectors();
             
             // Hide shield
             setTimeout(() => {
@@ -8389,6 +8428,44 @@
             window.scrollTo({ top, behavior: 'smooth' });
         }
         
+        function getItemLabel(subject, item, index) {
+            const prefix = subject === 'listening' ? 'Set' : subject === 'reading' ? 'Passage' : subject === 'grammar' ? 'Question' : 'Topic';
+            const title = item.title || item.type || item.name || '';
+            return `${prefix} ${index + 1}${title ? `: ${title}` : ''}`;
+        }
+
+        function initPageSelectors() {
+            ['listening', 'reading', 'grammar', 'writing'].forEach(subject => {
+                const select = document.getElementById(`${subject}-page-select`);
+                if (!select || !DB[subject]) return;
+                select.innerHTML = DB[subject].map((item, index) =>
+                    `<option value="${index}">${getItemLabel(subject, item, index)}</option>`
+                ).join('');
+                syncPageSelector(subject);
+            });
+        }
+
+        function syncPageSelector(subject) {
+            const select = document.getElementById(`${subject}-page-select`);
+            if (select) select.value = String(state[subject].index);
+        }
+
+        function renderSubject(subject) {
+            if (subject === 'listening') renderListening();
+            if (subject === 'reading') renderReading();
+            if (subject === 'grammar') renderGrammar();
+            if (subject === 'writing') renderWriting();
+            syncPageSelector(subject);
+        }
+
+        function goToItem(subject, value) {
+            const nextIndex = Number(value);
+            if (!Number.isInteger(nextIndex) || nextIndex < 0 || nextIndex >= DB[subject].length) return;
+            state[subject].index = nextIndex;
+            renderSubject(subject);
+            requestAnimationFrame(() => scrollToSubjectTop(subject));
+        }
+
         function setMode(subject, mode) {
             state[subject].mode = mode;
             
@@ -8407,10 +8484,7 @@
         function prevItem(subject) {
             if (state[subject].index > 0) {
                 state[subject].index--;
-                if (subject === 'listening') renderListening();
-                if (subject === 'reading') renderReading();
-                if (subject === 'grammar') renderGrammar();
-                if (subject === 'writing') renderWriting();
+                renderSubject(subject);
                 requestAnimationFrame(() => scrollToSubjectTop(subject));
             }
         }
@@ -8419,10 +8493,7 @@
             const data = DB[subject];
             if (state[subject].index < data.length - 1) {
                 state[subject].index++;
-                if (subject === 'listening') renderListening();
-                if (subject === 'reading') renderReading();
-                if (subject === 'grammar') renderGrammar();
-                if (subject === 'writing') renderWriting();
+                renderSubject(subject);
                 requestAnimationFrame(() => scrollToSubjectTop(subject));
             }
         }
