@@ -790,7 +790,7 @@
                             <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                         </div>
                         <h3>Writing</h3>
-                        <p style="font-size: 12px; margin: 0;">17 Topics</p>
+                        <p id="writing-topic-count" style="font-size: 12px; margin: 0;">22 Topics</p>
                     </div>
                 </div>
                 <div id="dashboard-cram"></div>
@@ -8407,6 +8407,9 @@
         };
 
         function renderDashboard() {
+            const writingCount = document.getElementById('writing-topic-count');
+            if (writingCount) writingCount.textContent = `${DB.writing.length} Topics`;
+
             const container = document.getElementById('dashboard-cram');
             if (!container) return;
 
