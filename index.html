@@ -646,6 +646,55 @@
             background: rgba(59, 130, 246, 0.2);
         }
 
+        .vocab-upgrade {
+            margin: 14px 0;
+            padding: 14px 16px;
+            background: rgba(59, 130, 246, 0.08);
+            border-left: 3px solid var(--primary);
+            border-radius: 6px;
+        }
+
+        .vocab-upgrade strong { color: var(--primary); }
+
+        .vocab-upgrade-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .vocab-upgrade-list span {
+            padding: 7px 10px;
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .vocab-coach-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+
+        .vocab-coach-item {
+            padding: 12px 14px;
+            background: rgba(16, 185, 129, 0.07);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 8px;
+        }
+
+        .vocab-coach-item strong {
+            display: block;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .vocab-coach-item small {
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
         /* Writing specific */
         textarea.notepad {
             width: 100%;
@@ -8302,6 +8351,35 @@
             writing: { index: 0, mode: 'review' }
         };
 
+        const WRITING_VOCAB_TH = {
+            'adverse effect': 'ผลกระทบเชิงลบ', 'adverbs of degree': 'คำวิเศษณ์บอกระดับ', 'sedentary lifestyle': 'วิถีชีวิตที่ไม่ค่อยเคลื่อนไหว', 'language acquisition': 'การเรียนรู้และพัฒนาภาษา', 'sleep deprivation': 'ภาวะอดนอน', 'neglect studies': 'ละเลยการเรียน',
+            'academic reinforcement': 'การเสริมความเข้าใจทางการเรียน', 'counterproductive': 'ให้ผลตรงข้ามกับที่ต้องการ', 'mental fatigue': 'ความเหนื่อยล้าทางจิตใจ', 'moderation': 'ความพอดี', 'unhealthy pressure': 'ความกดดันที่ส่งผลเสีย', 'review lessons': 'ทบทวนบทเรียน',
+            'disaster preparedness': 'การเตรียมพร้อมรับภัยพิบัติ', 'submerging homes': 'ทำให้บ้านเรือนจมอยู่ใต้น้ำ', 'evacuate': 'อพยพ', 'warning systems': 'ระบบเตือนภัย', 'resilient infrastructure': 'โครงสร้างพื้นฐานที่รับมือวิกฤตได้', 'community solidarity': 'ความสามัคคีของชุมชน',
+            'fast-paced society': 'สังคมที่ดำเนินชีวิตอย่างเร่งรีบ', 'convenience food': 'อาหารสำเร็จรูปเพื่อความสะดวก', 'extend shelf life': 'ยืดอายุการเก็บรักษา', 'sodium and sugar': 'โซเดียมและน้ำตาล', 'chronic health conditions': 'โรคหรือภาวะสุขภาพเรื้อรัง', 'home-cooked meals': 'อาหารที่ปรุงเองที่บ้าน',
+            'unrealistic beauty standards': 'มาตรฐานความงามที่ไม่สมจริง', 'body dissatisfaction': 'ความไม่พอใจต่อรูปร่างตนเอง', 'eating disorders': 'ความผิดปกติด้านการกิน', 'anorexia and bulimia': 'โรคอะนอเร็กเซียและบูลิเมีย', 'media literacy': 'การรู้เท่าทันสื่อ', 'representation': 'การนำเสนอภาพแทนในสื่อ',
+            'benchmark for growth': 'เกณฑ์อ้างอิงสำหรับการพัฒนา', 'roadmap': 'แผนที่นำทาง', 'academic excellence': 'ความเป็นเลิศทางวิชาการ', 'public service': 'การบริการสาธารณะ', 'career stability': 'ความมั่นคงทางอาชีพ', 'sacrificed': 'เสียสละ',
+            'basic medical supplies': 'เวชภัณฑ์พื้นฐาน', 'dehydration': 'ภาวะขาดน้ำ', 'immune response': 'การตอบสนองของภูมิคุ้มกัน', 'isolation': 'การแยกกักตัว', 'thermometer': 'เครื่องวัดอุณหภูมิ', 'pulse oximeter': 'เครื่องวัดออกซิเจนปลายนิ้ว',
+            'feasibility': 'ความเป็นไปได้', 'treasure trove': 'แหล่งข้อมูลล้ำค่าจำนวนมาก', 'culinary resources': 'แหล่งเรียนรู้ด้านการทำอาหาร', 'apprenticeship model': 'รูปแบบการเรียนรู้กับผู้เชี่ยวชาญ', 'hinder progress': 'ขัดขวางความก้าวหน้า', 'hands-on guidance': 'คำแนะนำจากการลงมือปฏิบัติจริง',
+            'self-medicate': 'ใช้ยารักษาตนเอง', 'accurately diagnose': 'วินิจฉัยได้อย่างแม่นยำ', 'prescription medicine': 'ยาที่ต้องมีใบสั่งแพทย์', 'maximum recommended dose': 'ปริมาณสูงสุดที่แนะนำ', 'overdose': 'ใช้ยาเกินขนาด', 'liver damage': 'ความเสียหายต่อตับ',
+            'profound impact': 'ผลกระทบอย่างลึกซึ้ง', 'materials science': 'วัสดุศาสตร์', 'global interconnectedness': 'ความเชื่อมโยงกันทั่วโลก', 'water purification': 'การทำให้น้ำบริสุทธิ์', 'freeze-dried food': 'อาหารแช่เยือกแข็งแบบแห้ง', 'scholarly excellence': 'ความเป็นเลิศทางวิชาการ',
+            'boost economy': 'กระตุ้นเศรษฐกิจ', 'level of employment': 'ระดับการจ้างงาน', 'influx of tourists': 'การหลั่งไหลเข้ามาของนักท่องเที่ยว', 'sustainability': 'ความยั่งยืน', 'littering': 'การทิ้งขยะเรี่ยราด', 'destructive impact': 'ผลกระทบที่ก่อความเสียหาย',
+            'boom in technology': 'การเติบโตอย่างรวดเร็วของเทคโนโลยี', 'changing trend': 'แนวโน้มที่กำลังเปลี่ยนแปลง', 'instant messaging': 'การส่งข้อความทันที', 'internet slang': 'คำสแลงทางอินเทอร์เน็ต', 'visual medium': 'สื่อที่สื่อสารด้วยภาพ', 'convey emotion': 'ถ่ายทอดอารมณ์',
+            'child-free lifestyle': 'วิถีชีวิตที่เลือกไม่มีบุตร', 'social acceptance': 'การยอมรับทางสังคม', 'sacrifice life': 'เสียสละการใช้ชีวิตส่วนตัว', 'overpopulation': 'ประชากรมากเกินไป', 'demanding task': 'งานที่ต้องใช้ความรับผิดชอบสูง', 'good intentions': 'เจตนาที่ดี',
+            'academic integrity': 'ความซื่อสัตย์ทางวิชาการ', 'time constraints': 'ข้อจำกัดด้านเวลา', 'paid journals': 'วารสารที่เรียกเก็บค่าตีพิมพ์', 'mentoring programs': 'โครงการให้คำปรึกษา', 'citation formats': 'รูปแบบการอ้างอิง',
+            'future opportunities': 'โอกาสในอนาคต', 'workplace culture': 'วัฒนธรรมในที่ทำงาน', 'career progress': 'ความก้าวหน้าทางอาชีพ', 'mental preparation': 'การเตรียมความพร้อมทางจิตใจ', 'readjustment': 'การปรับตัวใหม่', 'maintain open mind': 'เปิดใจยอมรับสิ่งต่าง ๆ',
+            'maturity': 'วุฒิภาวะ', 'independent living': 'การใช้ชีวิตอย่างอิสระ', 'financial support': 'การสนับสนุนทางการเงิน', 'maternal assistance': 'ความช่วยเหลือจากมารดา', 'emotional comfort': 'ความมั่นคงและสบายใจทางอารมณ์', 'debate': 'ประเด็นถกเถียง',
+            'medical treatment': 'การรักษาพยาบาล', 'equal opportunities': 'โอกาสที่เท่าเทียม', 'government support': 'การสนับสนุนจากรัฐบาล', 'affordable care': 'การรักษาที่ประชาชนรับภาระได้', 'workforce health': 'สุขภาพของกำลังแรงงาน', 'balanced society': 'สังคมที่สมดุล',
+            'from my perspective': 'จากมุมมองของฉัน', 'cultural understanding': 'ความเข้าใจทางวัฒนธรรม', 'depend completely on': 'พึ่งพาโดยสิ้นเชิง', 'furthermore': 'นอกจากนี้', 'for instance': 'ตัวอย่างเช่น', 'consequently': 'ดังนั้น / ด้วยเหตุนี้', 'effective communication': 'การสื่อสารที่มีประสิทธิภาพ',
+            'a lack of awareness': 'การขาดความตระหนักรู้', 'privacy risks': 'ความเสี่ยงด้านความเป็นส่วนตัว', 'personal data': 'ข้อมูลส่วนบุคคล', 'reliable sources': 'แหล่งข้อมูลที่เชื่อถือได้', 'responsible behavior': 'พฤติกรรมที่มีความรับผิดชอบ', 'as a result': 'ผลที่ตามมาคือ',
+            'free competition': 'การแข่งขันเสรี', 'equal conditions': 'เงื่อนไขที่เท่าเทียม', 'access to capital': 'การเข้าถึงแหล่งเงินทุน', 'in contrast': 'ในทางตรงกันข้าม', 'proportionate regulations': 'กฎระเบียบที่เหมาะสมกับขนาด', 'contribute to the economy': 'มีส่วนช่วยต่อเศรษฐกิจ',
+            'fundamental knowledge': 'ความรู้พื้นฐาน', 'logical thinking': 'การคิดอย่างมีตรรกะ', 'automated systems': 'ระบบอัตโนมัติ', 'reliable evidence': 'หลักฐานที่เชื่อถือได้', 'evaluate information': 'ประเมินข้อมูล', 'critical thinking': 'การคิดอย่างมีวิจารณญาณ', 'responsible decisions': 'การตัดสินใจอย่างรับผิดชอบ',
+            'cyber threats': 'ภัยคุกคามทางไซเบอร์', 'vulnerable users': 'ผู้ใช้ที่มีความเสี่ยงสูง', 'verification code': 'รหัสยืนยันตัวตน', 'two-factor authentication': 'การยืนยันตัวตนสองขั้นตอน', 'privacy settings': 'การตั้งค่าความเป็นส่วนตัว', 'suspicious message': 'ข้อความน่าสงสัย', 'an additional layer of protection': 'การป้องกันเพิ่มเติมอีกชั้นหนึ่ง'
+        };
+
+        function getWritingVocabThai(word) {
+            return WRITING_VOCAB_TH[String(word).toLowerCase()] || 'คำศัพท์สำคัญสำหรับหัวข้อนี้';
+        }
+
         const CRAM_KEY = 'mugrad_cram_stats_v1';
         const fiveDayPlan = [
             { day: 1, title: 'Map the exam', task: 'Reading 1-4, Listening 1-2, Grammar 1-20, Writing topics 1-4' },
@@ -9026,9 +9104,23 @@
                 }
                 
                 if (item.useful_vocab) {
-                    html += `<h4 style="margin: 15px 0 10px;">Useful Vocabulary</h4><div class="checklist">`;
+                    html += `
+                        <h4 style="margin: 15px 0 10px;">Vocabulary Coach</h4>
+                        <div class="vocab-upgrade">
+                            <strong>Professional upgrade</strong>
+                            <div style="color: var(--text-muted); margin-top: 5px;">เลือกใช้วลีที่เป็นภาษาเขียนแทนคำทั่วไป แต่ควรใช้ให้ตรงความหมาย ไม่จำเป็นต้องใช้ศัพท์ยากทุกประโยค</div>
+                            <div class="vocab-upgrade-list">
+                                <span>I think → From my perspective</span>
+                                <span>because → This is mainly because</span>
+                                <span>also → Furthermore</span>
+                                <span>so → Consequently</span>
+                                <span>bad effect → adverse effect</span>
+                                <span>big problem → significant challenge</span>
+                            </div>
+                        </div>
+                        <div class="vocab-coach-grid">`;
                     item.useful_vocab.forEach(word => {
-                        html += `<div class="check-chip found">${word}</div>`;
+                        html += `<div class="vocab-coach-item"><strong>${word}</strong><small>${getWritingVocabThai(word)}</small></div>`;
                     });
                     html += `</div>`;
                 }
