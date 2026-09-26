@@ -713,6 +713,12 @@
         .phrase-entries dt { color: var(--accent); font-weight: 600; }
         .phrase-entries dd { margin: 6px 0 0; line-height: 1.7; font-size: 14px; }
         .phrase-example { color: var(--text-main); }
+        #writing-feedback { overflow-wrap:anywhere; }
+        #writing-feedback h4 { margin:18px 0 8px; }
+        #writing-feedback p, #writing-feedback blockquote { white-space:pre-wrap; line-height:1.8; }
+        .writing-edit, .writing-paragraph-feedback { border-top:1px solid var(--border-light); padding:12px 0; }
+        #writing-feedback ul { padding-left:22px; }
+        #writing-feedback li { margin:8px 0; }
         /* Writing specific */
         textarea.notepad {
             width: 100%;
@@ -9500,6 +9506,132 @@ const ESSAY_PARAGRAPHS_TH = {
                 ).join('') + '</dl></details>'
             ).join('') + '</div>';
         }
+const writingDrafts = {};
+        let writingReviewController = null;
+        let writingReviewGeneration = 0;
+
+
+        function cancelWritingReview() {
+            writingReviewGeneration++;
+            if (writingReviewController) writingReviewController.abort();
+            writingReviewController = null;
+            const button = document.getElementById('check-writing');
+            if (button) button.disabled = false;
+        }
+
+        function writingDraftKey(id) { return 'mugrad_writing_draft_' + id; }
+
+        function restoreWritingDraft(id) {
+            if (Object.prototype.hasOwnProperty.call(writingDrafts, id)) return writingDrafts[id];
+            try { return localStorage.getItem(writingDraftKey(id)) || ''; }
+            catch { return ''; }
+        }
+
+        function onWritingInput(text) {
+            cancelWritingReview();
+            const id = DB.writing[state.writing.index].id;
+            writingDrafts[id] = text;
+            const status = document.getElementById('writing-draft-status');
+            try {
+                localStorage.setItem(writingDraftKey(id), text);
+                status.textContent = 'บันทึกร่างในเครื่องแล้ว';
+            } catch {
+                status.textContent = 'บันทึกได้เฉพาะรอบนี้ เบราว์เซอร์ไม่อนุญาตให้เก็บร่างถาวร';
+            }
+            updateWordCount(text);
+            document.getElementById('writing-feedback').replaceChildren();
+            document.getElementById('writing-check-status').textContent = '';
+        }
+
+        function basicWritingReview(text, item) {
+            const paragraphs = text.trim().split(/\n\s*\n/).filter(Boolean);
+            const opinion = /opinion|agree|believe|outweigh|necessary|should/i.test(item.prompt);
+            const corrections = [];
+            const rules = [
+                [/\bI am agree\b/gi, 'I agree', 'agree เป็นกริยา จึงไม่ใช้ am นำหน้า'],
+                [/\bpeoples are\b/gi, 'people are', 'เมื่อหมายถึงผู้คนทั่วไป people เป็นพหูพจน์อยู่แล้ว; peoples ใช้หมายถึงกลุ่มชน'],
+                [/\bshould to\b/gi, 'should', 'หลัง should ใช้กริยารูปพื้นฐานโดยไม่มี to'],
+                [/\bcan to\b/gi, 'can', 'หลัง can ใช้กริยารูปพื้นฐานโดยไม่มี to'],
+                [/\bmore better\b/gi, 'better', 'better เป็นขั้นกว่าอยู่แล้ว จึงไม่ใช้ more ซ้อน'],
+                [/\bin my opinion\s*,?\s*I think\b/gi, 'In my opinion,', 'สองวลีนี้แสดงจุดยืนซ้ำกัน เลือกหนึ่งวลีแล้วตามด้วยใจความ'],
+                [/\bdiscuss about\b/gi, 'discuss', 'discuss ตามด้วยเรื่องที่พูดถึงได้เลย'],
+                [/\bdespite of\b/gi, 'despite', 'ใช้ despite + คำนาม หรือ in spite of + คำนาม'],
+                [/\ba important\b/gi, 'an important', 'important เริ่มด้วยเสียงสระ จึงใช้ an']
+            ];
+            for (const [pattern, replacement, reason] of rules) {
+                for (const match of text.matchAll(pattern)) corrections.push({ original: match[0], suggestion: replacement, reason });
+            }
+            const vocabulary = [];
+            for (const [pattern, suggestion, reason] of [
+                [/\bI think\b/i, 'In my view, ...', 'I think ถูกต้องอยู่แล้ว วลีนี้เป็นทางเลือกสำหรับแสดงจุดยืน ไม่จำเป็นต้องเปลี่ยนทุกครั้ง'],
+                [/\bbad effect\b/i, 'adverse effect', 'ใช้เมื่อหมายถึงผลกระทบเชิงลบ เช่น have an adverse effect on learning'],
+                [/\ba lot of\b/i, 'many / much / a considerable amount of', 'เลือกตามคำนาม: many students, much time; a lot of ไม่ใช่ข้อผิดไวยากรณ์'],
+                [/\bbig problem\b/i, 'a significant problem / a major challenge', 'เลือกตามความหมาย และปรับ a/an ให้เข้ากับคำที่ใช้']
+            ]) {
+                const match = text.match(pattern);
+                if (match) vocabulary.push({original: match[0], suggestion, reason});
+            }
+            return {
+                summary: 'ตรวจเบื้องต้นจากรูปแบบคำและโครงสร้างเท่านั้น ยังไม่ยืนยันความถูกต้องของทุกประโยคหรือการตอบตรงโจทย์ ไม่ใช่คะแนนสอบ',
+                paragraphs: paragraphs.map((paragraph, index) => {
+                    const intro = index === 0;
+                    const conclusion = !intro && /^(in conclusion|to conclude|to sum up|overall|in summary)\b/i.test(paragraph);
+                    const role = intro ? 'บทนำ / Introduction' : conclusion ? 'บทสรุป / Conclusion' : 'เนื้อหา / Body';
+                    const notes = [];
+                    if (intro) {
+                        notes.push('ตรวจว่าประโยคแรกเกริ่นประเด็นของโจทย์ด้วยภาษาของคุณเอง และประโยคถัดไประบุแนวทางที่จะตอบ');
+                        if (opinion) notes.push(/\b(I believe|I think|in my view|in my opinion|from my perspective|I agree|I disagree|I would argue)\b/i.test(paragraph)
+                            ? 'พบวลีแสดงจุดยืนแล้ว: อ่านต่อว่าจุดยืนชัดและมีเหตุผลรองรับหรือไม่'
+                            : 'ยังไม่พบวลีแสดงจุดยืนที่ตัวตรวจรู้จัก ลองระบุความเห็นและเหตุผลหลักให้ชัด; คุณอาจแสดงจุดยืนด้วยรูปแบบอื่นอยู่แล้ว');
+                        if (paragraph.split(/\s+/).length > 100) notes.push('บทนำค่อนข้างยาว ลองย้ายรายละเอียดตัวอย่างไปย่อหน้าเนื้อหา');
+                    } else if (conclusion) {
+                        notes.push('พบคำเชื่อมสรุป ตรวจว่าสรุปจุดยืนเดิมและเหตุผลสำคัญ โดยไม่เพิ่มข้ออ้างใหม่');
+                    } else {
+                        notes.push('ตรวจลำดับ: ประเด็นหลัก → เหตุผล → ตัวอย่าง → ผลที่เชื่อมกลับไปยังโจทย์');
+                        if (!/\b(for example|for instance|such as|consider)\b/i.test(paragraph)) notes.push('ยังไม่พบคำชี้ตัวอย่าง ลองเพิ่มสถานการณ์เฉพาะเพื่ออธิบายประเด็น; ตัวอย่างอาจเขียนโดยไม่ใช้คำเหล่านี้ได้');
+                        if (!/\b(because|since|reason|as a result|therefore|consequently|leads? to)\b/i.test(paragraph)) notes.push('ลองอธิบายให้ชัดว่าทำไมข้ออ้างนี้จึงเป็นจริง และผลตามมาคืออะไร');
+                    }
+                    return {number: index + 1, role, feedback: notes.join('\n'), improved: ''};
+                }),
+                corrections,
+                vocabulary,
+                nextSteps: [
+                    paragraphs.length === 1 ? 'หากนี่เป็นร่างบทนำอย่างเดียว ให้เขียนต่อด้วยเหตุผลและตัวอย่าง; หากเป็น essay ทั้งเรื่อง ให้เว้นบรรทัดว่างเพื่อแบ่งย่อหน้า' : 'ตรวจว่าทุกย่อหน้าสนับสนุนคำตอบเดียวกันและตอบครบทุกส่วนของโจทย์',
+                    'อ่านแต่ละประโยคเพื่อตรวจประธาน กริยา และความหมาย ตัวตรวจเบื้องต้นยังประเมินความหมายเชิงลึกไม่ได้',
+                    'แนวบทนำสำหรับหัวข้อนี้: ' + ((item.outline_th || {}).introduction || (item.outline || {}).introduction || item.prompt)
+                ]
+            };
+        }
+
+        function renderWritingFeedback(review, source) {
+            const esc = essayEscape;
+            const edits = (items, heading, empty) => '<h4>' + heading + '</h4>' +
+                (items.length ? items.map(edit => '<div class="writing-edit"><p><strong>เดิม:</strong> ' +
+                    esc(edit.original) + '</p><p><strong>ลองปรับ:</strong> ' + esc(edit.suggestion) +
+                    '</p><p lang="th">' + esc(edit.reason) + '</p></div>').join('') : '<p>' + empty + '</p>');
+            return '<h3>' + esc(source) + '</h3><p>' + esc(review.summary) + '</p>' +
+                review.paragraphs.map(p => '<section class="writing-paragraph-feedback"><h4>ย่อหน้า ' + esc(p.number) +
+                    ' · ' + esc(p.role) + '</h4><p>' + esc(p.feedback) + '</p>' +
+                    (p.improved ? '<p><strong>ตัวอย่างปรับจากร่างของคุณ:</strong></p><blockquote lang="en">' + esc(p.improved) + '</blockquote>' : '') +
+                    '</section>').join('') +
+                edits(review.corrections, 'ไวยากรณ์และการใช้คำ', 'ไม่พบจุดที่ตัวตรวจระบุในรอบนี้ ไม่ได้หมายความว่าถูกต้องทุกประโยค') +
+                edits(review.vocabulary, 'ทางเลือกด้านสำนวน', 'ไม่มีคำแนะนำเปลี่ยนสำนวนเพิ่มเติมในรอบนี้') +
+                '<h4>สิ่งที่ควรทำต่อ</h4><ul>' + review.nextSteps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ul>';
+        }
+
+
+        function checkWriting() {
+            const textarea = document.getElementById('writing-notepad');
+            const text = textarea.value.trim();
+            const status = document.getElementById('writing-check-status');
+            const output = document.getElementById('writing-feedback');
+            output.replaceChildren();
+            if (!text) { status.textContent = 'พิมพ์บทนำหรือ essay ก่อนตรวจครับ'; textarea.focus(); return; }
+            if (text.length > 24000) { status.textContent = 'กรุณาตรวจครั้งละไม่เกิน 24,000 ตัวอักษร'; return; }
+            const item = DB.writing[state.writing.index];
+            output.innerHTML = renderWritingFeedback(basicWritingReview(text, item), 'ผลตรวจเบื้องต้น');
+            status.textContent = 'ตรวจเสร็จแล้ว · ตรวจภายในเครื่อง';
+        }
         function renderWriting() {
             const container = document.getElementById('writing-container');
             const data = DB.writing;
@@ -9575,8 +9707,12 @@ const ESSAY_PARAGRAPHS_TH = {
                 // Practice mode
                 html += `
                     <h4 style="margin: 15px 0 10px;">Write your essay below:</h4>
-                    <textarea id="writing-notepad" class="notepad" placeholder="Start typing your essay here... Aim for ~350 words." onkeyup="updateWordCount(this.value)"></textarea>
+                    <textarea id="writing-notepad" class="notepad" aria-label="Your essay" placeholder="Write your introduction or essay..." oninput="onWritingInput(this.value)"></textarea>
                     <div id="word-counter" class="word-count">0 / 350 words</div>
+                    <p id="writing-draft-status" role="status"></p>
+                    <button type="button" class="btn" id="check-writing" onclick="checkWriting()" style="margin:16px 0;">ตรวจงานเขียนเบื้องต้น</button>
+                    <p id="writing-check-status" role="status" aria-live="polite"></p>
+                    <div id="writing-feedback" aria-label="Writing feedback"></div>
                 `;
                 
                 if (item.useful_vocab) {
@@ -9589,6 +9725,11 @@ const ESSAY_PARAGRAPHS_TH = {
             }
             
             container.innerHTML = html;
+            if (mode === 'test') {
+                const draft = restoreWritingDraft(item.id);
+                document.getElementById('writing-notepad').value = draft;
+                updateWordCount(draft);
+            }
         }
         
         window.updateWordCount = function(text) {
