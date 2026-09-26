@@ -695,6 +695,15 @@
             line-height: 1.45;
         }
 
+.essay-paragraph { margin: 0 0 20px; line-height: 1.85; }
+        .essay-translation { margin: 0 0 20px; }
+        .essay-translation summary { cursor: help; list-style: none; border-bottom: 1px dotted var(--accent); border-radius: 4px; line-height: 1.85; }
+        .essay-translation summary::-webkit-details-marker { display: none; }
+        .essay-translation summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+        .essay-translation .essay-th { display: none; padding: 12px; margin-top: 8px; border-left: 3px solid var(--accent); background: rgba(16,185,129,.1); color: var(--text-main); line-height: 1.8; }
+        .essay-translation[open] .essay-th { display: block; }
+        @media (hover: hover) { .essay-translation:hover .essay-th { display: block; } }
+        .essay-term { border-bottom: 1px dotted var(--accent); cursor: help; }
         /* Writing specific */
         textarea.notepad {
             width: 100%;
@@ -9060,6 +9069,37 @@
             container.innerHTML = html;
         }
         
+const ESSAY_PARAGRAPHS_TH = {
+            1: [
+                "หลายคน โดยเฉพาะเด็ก ๆ ชอบเล่นเกมคอมพิวเตอร์ แม้ฉันจะยอมรับว่าบางครั้งเกมเหล่านี้ส่งผลดีต่อผู้เล่นได้ แต่ฉันเชื่อว่าเกมมีแนวโน้มที่จะก่อผลเสียมากกว่า",
+                "ในด้านหนึ่ง วิดีโอเกมมีประโยชน์สำคัญหลายประการ ประการแรก เกมกระตุ้นจินตนาการและความคิดสร้างสรรค์ของผู้เล่นได้ เกมสมัยใหม่มักนำเสนอโลกเสมือนที่ซับซ้อน ซึ่งต้องใช้การแก้ปัญหาและการวางกลยุทธ์ ประการที่สอง เกมช่วยพัฒนาภาษาได้ เพราะหลายเกมใช้ภาษาอังกฤษและผู้เล่นต้องอ่านหรือฟังเพื่อติดตามเนื้อเรื่อง สุดท้าย เกมหลายผู้เล่นแบบทีมสอนทักษะความร่วมมือและการสื่อสาร เพราะผู้เล่นต้องทำงานร่วมกันเพื่อบรรลุเป้าหมายเดียวกัน",
+                "ในอีกด้านหนึ่ง ข้อเสียของการเล่นวิดีโอเกมมีมาก ปัญหาหลักคือการเสียเวลา ผู้เล่นมักใช้เวลาหลายชั่วโมงอยู่หน้าจอแทนที่จะเรียนหรือออกกำลังกาย วิถีชีวิตที่ไม่ค่อยเคลื่อนไหวเช่นนี้อาจนำไปสู่ปัญหาสุขภาพกาย เช่น โรคอ้วน นอกจากนี้ การเล่นเกมอาจทำให้เสียเงินไปกับเครื่องเล่นราคาแพงและการซื้อสิ่งของภายในเกม อีกทั้งการเล่นมากเกินไปนำไปสู่การอดนอน ซึ่งส่งผลเสียต่อผลการเรียนและสมาธิ นักเรียนหลายคนละเลยการบ้านและการเรียน ทำให้ผลการเรียนตกต่ำ",
+                "โดยสรุป แม้การเล่นวิดีโอเกมจะช่วยพัฒนาทักษะ เช่น การเรียนภาษาและการทำงานเป็นทีม แต่ฉันเชื่อว่าข้อเสีย เช่น การเสียเวลาและละเลยการเรียน มีน้ำหนักมากกว่าประโยชน์ ผู้ปกครองและครูจึงควรดูแลและจำกัดเวลาเล่นเกมเพื่อป้องกันผลเสียเหล่านี้"
+            ]
+        };
+
+        function essayEscape(value) {
+            return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        function renderEssayTranslation(item) {
+            const terms = Object.keys(WRITING_VOCAB_TH).sort((a, b) => b.length - a.length);
+            const pattern = new RegExp('\\b(' + terms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\b', 'gi');
+            return item.sample_essay.split(/\n\s*\n/).map((paragraph, index) => {
+                const translation = (ESSAY_PARAGRAPHS_TH[item.id] || [])[index];
+                if (translation) {
+                    return '<details class="essay-translation"><summary aria-label="Paragraph ' + (index + 1) + ': Thai translation">' + essayEscape(paragraph) + '</summary><div class="essay-th" lang="th">' + essayEscape(translation) + '</div></details>';
+                }
+                let result = '', offset = 0;
+                for (const match of paragraph.matchAll(pattern)) {
+                    result += essayEscape(paragraph.slice(offset, match.index));
+                    const meaning = WRITING_VOCAB_TH[match[0].toLowerCase()];
+                    result += '<span class="essay-term" tabindex="0" title="' + essayEscape(meaning) + '" onclick="this.nextElementSibling.hidden = !this.nextElementSibling.hidden" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}" role="button" aria-label="' + essayEscape(match[0] + ': ' + meaning) + '">' + essayEscape(match[0]) + '</span><span lang="th" hidden> (' + essayEscape(meaning) + ')</span>';
+                    offset = match.index + match[0].length;
+                }
+                return '<p class="essay-paragraph">' + result + essayEscape(paragraph.slice(offset)) + '</p>';
+            }).join('');
+        }
         function renderWriting() {
             const container = document.getElementById('writing-container');
             const data = DB.writing;
@@ -9127,7 +9167,7 @@
                 
                 if (item.sample_essay) {
                     html += `<h4 style="margin: 15px 0 10px;">Sample Essay (approx 350 words)</h4>
-                    <div class="passage-text" style="max-height: none;">${item.sample_essay}</div>`;
+                    <div class="passage-text" style="max-height: none;">${renderEssayTranslation(item)}</div>`;
                 }
                 
             } else {
