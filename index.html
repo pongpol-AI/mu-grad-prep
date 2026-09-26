@@ -704,6 +704,15 @@
         .essay-translation[open] .essay-th { display: block; }
         @media (hover: hover) { .essay-translation:hover .essay-th { display: block; } }
         .essay-term { border-bottom: 1px dotted var(--accent); cursor: help; }
+        .phrase-category { margin-top: 12px; border-top: 1px solid var(--border-light); padding-top: 10px; }
+        .phrase-category summary { cursor: pointer; font-weight: 600; padding: 8px 0; overflow-wrap: anywhere; }
+        .phrase-category summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+        .phrase-guidance { font-size: 14px; margin: 8px 0; line-height: 1.7; }
+        .phrase-entries { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 24px; }
+        .phrase-entries > div { padding: 14px 0; min-width: 0; border-bottom: 1px solid var(--border-light); overflow-wrap: anywhere; }
+        .phrase-entries dt { color: var(--accent); font-weight: 600; }
+        .phrase-entries dd { margin: 6px 0 0; line-height: 1.7; font-size: 14px; }
+        .phrase-example { color: var(--text-main); }
         /* Writing specific */
         textarea.notepad {
             width: 100%;
@@ -9099,6 +9108,378 @@ const ESSAY_PARAGRAPHS_TH = {
                 return '<p class="essay-paragraph">' + result + essayEscape(paragraph.slice(offset)) + '</p>';
             }).join('');
         }
+        const WRITING_PHRASE_GROUPS = [
+  [
+    "แสดงจุดยืน",
+    "ตามด้วยประโยคที่แสดงจุดยืนชัดเจน เลือกใช้หนึ่งวลีต่อจุดยืน",
+    [
+      [
+        "In my view, ...",
+        "ในมุมมองของฉัน",
+        "In my view, language learning remains essential."
+      ],
+      [
+        "From my perspective, ...",
+        "จากมุมมองของฉัน",
+        "From my perspective, technology should support learning."
+      ],
+      [
+        "I would argue that ...",
+        "ฉันขอเสนอว่า",
+        "I would argue that schools should teach digital safety."
+      ],
+      [
+        "I believe that ...",
+        "ฉันเชื่อว่า",
+        "I believe that competition benefits consumers."
+      ],
+      [
+        "I agree with the view that ...",
+        "ฉันเห็นด้วยกับแนวคิดที่ว่า",
+        "I agree with the view that education should be accessible."
+      ],
+      [
+        "I support ... because ...",
+        "ฉันสนับสนุน…เพราะ…",
+        "I support online learning because it offers flexibility."
+      ]
+    ]
+  ],
+  [
+    "เปิดเรื่องและกำหนดประเด็น",
+    "ระบุหัวข้อให้เฉพาะเจาะจง ไม่อ้างว่ามีงานวิจัยหรือคนส่วนใหญ่เห็นด้วยหากไม่มีข้อมูล",
+    [
+      [
+        "In recent years, ...",
+        "ในช่วงไม่กี่ปีที่ผ่านมา",
+        "In recent years, online learning has become more common."
+      ],
+      [
+        "The question of whether ... remains important.",
+        "คำถามที่ว่า…ยังคงสำคัญ",
+        "The question of whether homework is necessary remains important."
+      ],
+      [
+        "As ... becomes more common, ...",
+        "เมื่อ…แพร่หลายขึ้น…",
+        "As AI becomes more common, digital literacy becomes more important."
+      ],
+      [
+        "... plays an important role in ...",
+        "…มีบทบาทสำคัญใน…",
+        "Education plays an important role in personal development."
+      ],
+      [
+        "This raises the question of whether ...",
+        "สิ่งนี้นำไปสู่คำถามว่า…",
+        "This raises the question of whether translation tools can replace language learning."
+      ],
+      [
+        "While some people ..., others ...",
+        "ขณะที่บางคน…คนอื่นกลับ…",
+        "While some people prefer independent living, others value family support."
+      ]
+    ]
+  ],
+  [
+    "ให้เหตุผล",
+    "because ตามด้วยประโยค แต่ because of ตามด้วยคำนามหรือวลีคำนาม",
+    [
+      [
+        "One important reason is that ...",
+        "เหตุผลสำคัญข้อหนึ่งคือ…",
+        "One important reason is that students need time to rest."
+      ],
+      [
+        "This is mainly because ...",
+        "สาเหตุหลักเป็นเพราะ…",
+        "This is mainly because small businesses have limited resources."
+      ],
+      [
+        "... because of ...",
+        "…เนื่องจาก…",
+        "Some students struggle because of financial difficulties."
+      ],
+      [
+        "A key factor is ...",
+        "ปัจจัยสำคัญคือ…",
+        "A key factor is access to reliable information."
+      ],
+      [
+        "This can be explained by ...",
+        "สิ่งนี้อธิบายได้ด้วย…",
+        "This can be explained by the rising cost of living."
+      ],
+      [
+        "The main reason for ... is ...",
+        "เหตุผลหลักของ…คือ…",
+        "The main reason for setting goals is to give our actions direction."
+      ]
+    ]
+  ],
+  [
+    "เพิ่มและขยายประเด็น",
+    "Furthermore และ In addition ใช้เพิ่มข้อมูล ไม่ได้แสดงความขัดแย้ง",
+    [
+      [
+        "Furthermore, ...",
+        "นอกจากนี้…",
+        "Furthermore, language skills can create career opportunities."
+      ],
+      [
+        "In addition, ...",
+        "อีกทั้ง…",
+        "In addition, students need practical experience."
+      ],
+      [
+        "Another important consideration is ...",
+        "อีกประเด็นที่ควรพิจารณาคือ…",
+        "Another important consideration is the cost of training."
+      ],
+      [
+        "This also allows ... to ...",
+        "สิ่งนี้ยังช่วยให้…สามารถ…",
+        "This also allows students to learn at their own pace."
+      ],
+      [
+        "... not only ... but also ...",
+        "…ไม่เพียง…แต่ยัง…",
+        "Online courses not only save time but also reduce travel costs."
+      ],
+      [
+        "Beyond ..., ...",
+        "นอกเหนือจาก…แล้ว…",
+        "Beyond academic knowledge, students need communication skills."
+      ]
+    ]
+  ],
+  [
+    "ยกตัวอย่าง",
+    "ตัวอย่างสมมติใช้ may หรือ could ได้ ไม่ต้องแต่งตัวเลขสถิติ",
+    [
+      [
+        "For example, ...",
+        "ตัวอย่างเช่น…",
+        "For example, a student may use AI to check an outline."
+      ],
+      [
+        "For instance, ...",
+        "ยกตัวอย่างเช่น…",
+        "For instance, a local shop could offer personal service."
+      ],
+      [
+        "A clear example of this is ...",
+        "ตัวอย่างที่ชัดเจนคือ…",
+        "A clear example of this is the use of video lessons."
+      ],
+      [
+        "To illustrate this point, ...",
+        "เพื่อแสดงให้เห็นประเด็นนี้…",
+        "To illustrate this point, consider a student studying abroad."
+      ],
+      [
+        "Consider the case of ...",
+        "ลองพิจารณากรณีของ…",
+        "Consider the case of a small business with limited capital."
+      ],
+      [
+        "... such as ...",
+        "…เช่น…",
+        "Students need skills such as teamwork and problem-solving."
+      ]
+    ]
+  ],
+  [
+    "ผลลัพธ์และความเชื่อมโยง",
+    "แสดงเหตุให้ชัดก่อนใช้ Therefore หรือ Consequently; may ช่วยหลีกเลี่ยงการสรุปเกินจริง",
+    [
+      [
+        "As a result, ...",
+        "ผลที่ตามมาคือ…",
+        "As a result, students may become more confident."
+      ],
+      [
+        "Consequently, ...",
+        "ด้วยเหตุนี้…",
+        "Consequently, families may have less money for education."
+      ],
+      [
+        "Therefore, ...",
+        "ดังนั้น…",
+        "Therefore, schools should provide practical guidance."
+      ],
+      [
+        "This can lead to ...",
+        "สิ่งนี้อาจนำไปสู่…",
+        "This can lead to better communication."
+      ],
+      [
+        "This, in turn, can ...",
+        "สิ่งนี้ส่งผลต่อเนื่องให้…",
+        "This, in turn, can improve job opportunities."
+      ],
+      [
+        "By doing so, ...",
+        "ด้วยการทำเช่นนี้…",
+        "By doing so, students can develop greater independence."
+      ]
+    ]
+  ],
+  [
+    "เปรียบเทียบและยอมรับข้อโต้แย้ง",
+    "Although ตามด้วยประโยค; despite ตามด้วยคำนามหรือ -ing และไม่ใช้ although กับ but ซ้อนกัน",
+    [
+      [
+        "However, ...",
+        "อย่างไรก็ตาม…",
+        "However, online learning also has limitations."
+      ],
+      [
+        "Nevertheless, ...",
+        "ถึงกระนั้น…",
+        "Nevertheless, traditional skills remain valuable."
+      ],
+      [
+        "In contrast, ...",
+        "ในทางตรงกันข้าม…",
+        "In contrast, small firms may have limited capital."
+      ],
+      [
+        "Although ..., ...",
+        "แม้ว่า…แต่…",
+        "Although AI is useful, its answers require careful checking."
+      ],
+      [
+        "Despite ..., ...",
+        "แม้จะมี…",
+        "Despite its convenience, online learning requires self-discipline."
+      ],
+      [
+        "It is true that ...; however, ...",
+        "จริงอยู่ที่…อย่างไรก็ตาม…",
+        "It is true that games are entertaining; however, excessive play can disrupt study."
+      ]
+    ]
+  ],
+  [
+    "เสนอวิธีแก้ไข",
+    "เสนอว่าใครควรทำอะไร พร้อมเหตุผลหรือผลที่คาดหวัง",
+    [
+      [
+        "One possible solution is to ...",
+        "วิธีแก้หนึ่งคือ…",
+        "One possible solution is to provide affordable training."
+      ],
+      [
+        "... should take steps to ...",
+        "…ควรดำเนินการเพื่อ…",
+        "Schools should take steps to improve digital literacy."
+      ],
+      [
+        "To address this issue, ...",
+        "เพื่อจัดการปัญหานี้…",
+        "To address this issue, families should discuss online safety."
+      ],
+      [
+        "A practical approach would be to ...",
+        "แนวทางที่ทำได้จริงคือ…",
+        "A practical approach would be to start with a small project."
+      ],
+      [
+        "Rather than ..., ... should ...",
+        "แทนที่จะ…ควร…",
+        "Rather than waiting for perfect conditions, teams should begin with manageable tasks."
+      ],
+      [
+        "... can be reduced by ...",
+        "…สามารถลดลงได้ด้วย…",
+        "Misunderstandings can be reduced by checking information carefully."
+      ]
+    ]
+  ],
+  [
+    "สรุปและชั่งน้ำหนัก",
+    "สรุปจุดยืนจากเหตุผลเดิม ไม่เพิ่มเหตุผลใหม่ในย่อหน้าสุดท้าย",
+    [
+      [
+        "In conclusion, ...",
+        "โดยสรุป…",
+        "In conclusion, technology should support human judgment."
+      ],
+      [
+        "Overall, ...",
+        "โดยภาพรวม…",
+        "Overall, a balanced approach is more practical."
+      ],
+      [
+        "On balance, ...",
+        "เมื่อชั่งน้ำหนักแล้ว…",
+        "On balance, the benefits outweigh the drawbacks."
+      ],
+      [
+        "Taking these factors into account, ...",
+        "เมื่อพิจารณาปัจจัยเหล่านี้…",
+        "Taking these factors into account, I support continued language education."
+      ],
+      [
+        "For these reasons, ...",
+        "ด้วยเหตุผลเหล่านี้…",
+        "For these reasons, schools should retain mathematics lessons."
+      ],
+      [
+        "Although ... offers benefits, ... remains essential.",
+        "แม้…มีประโยชน์ แต่…ยังจำเป็น",
+        "Although AI offers benefits, critical thinking remains essential."
+      ]
+    ]
+  ],
+  [
+    "วลีแทนคำทั่วไป",
+    "ใช้เป็นส่วนหนึ่งของประโยค ไม่ใช่คำที่แทนกันได้ในทุกบริบท",
+    [
+      [
+        "have an adverse effect on ...",
+        "ส่งผลเสียต่อ… แทน have a bad effect on",
+        "Excessive gaming can have an adverse effect on concentration."
+      ],
+      [
+        "pose a significant challenge to ...",
+        "เป็นความท้าทายสำคัญต่อ…",
+        "High costs pose a significant challenge to small businesses."
+      ],
+      [
+        "provide an opportunity to ...",
+        "เปิดโอกาสให้…",
+        "Online courses provide an opportunity to develop new skills."
+      ],
+      [
+        "make a valuable contribution to ...",
+        "มีส่วนช่วยอย่างมีคุณค่าต่อ…",
+        "Small businesses make a valuable contribution to local communities."
+      ],
+      [
+        "develop a deeper understanding of ...",
+        "พัฒนาความเข้าใจ…ให้ลึกซึ้งขึ้น",
+        "Language learning helps students develop a deeper understanding of culture."
+      ],
+      [
+        "strike a balance between ... and ...",
+        "สร้างสมดุลระหว่าง…กับ…",
+        "Students should strike a balance between study and rest."
+      ]
+    ]
+  ]
+];
+        function renderWritingPhraseBank() {
+            return '<div class="writing-phrase-bank">' + WRITING_PHRASE_GROUPS.map((group, index) =>
+                '<details class="phrase-category"' + (index === 0 ? ' open' : '') + '><summary>' +
+                essayEscape(group[0]) + ' (' + group[2].length + ')</summary><p class="phrase-guidance" lang="th">' +
+                essayEscape(group[1]) + '</p><dl class="phrase-entries">' + group[2].map(entry =>
+                    '<div><dt>' + essayEscape(entry[0]) + '</dt><dd lang="th">' + essayEscape(entry[1]) +
+                    '</dd><dd class="phrase-example" lang="en">' + essayEscape(entry[2]) + '</dd></div>'
+                ).join('') + '</dl></details>'
+            ).join('') + '</div>';
+        }
         function renderWriting() {
             const container = document.getElementById('writing-container');
             const data = DB.writing;
@@ -9146,7 +9527,7 @@ const ESSAY_PARAGRAPHS_TH = {
                     html += `
                         <h4 style="margin: 15px 0 10px;">Vocabulary Coach</h4>
                         <div class="vocab-upgrade">
-                            <strong>Professional upgrade</strong>
+                            <strong>Professional upgrade · 60 phrases</strong>
                             <div style="color: var(--text-muted); margin-top: 5px;">เลือกใช้วลีที่เป็นภาษาเขียนแทนคำทั่วไป แต่ควรใช้ให้ตรงความหมาย ไม่จำเป็นต้องใช้ศัพท์ยากทุกประโยค</div>
                             <div class="vocab-upgrade-list">
                                 <span>I think → From my perspective</span>
@@ -9156,6 +9537,7 @@ const ESSAY_PARAGRAPHS_TH = {
                                 <span>bad effect → adverse effect</span>
                                 <span>big problem → significant challenge</span>
                             </div>
+                            ${renderWritingPhraseBank()}
                         </div>
                         <div class="vocab-coach-grid">`;
                     item.useful_vocab.forEach(word => {
