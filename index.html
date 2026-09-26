@@ -852,6 +852,11 @@
                         <h3>Grammar</h3>
                         <p style="font-size: 12px; margin: 0;">70 Questions</p>
                     </div>
+                    <button type="button" class="subject-card" onclick="switchTab('speaking')" style="font:inherit;color:inherit;text-align:center;">
+                        <div class="subject-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V21h2v-3.07A7 7 0 0 0 19 11z"/></svg></div>
+                        <h3>Speaking</h3>
+                        <p style="font-size:12px;margin:0;">5 Parts</p>
+                    </button>
                     <div class="subject-card" onclick="switchTab('writing')">
                         <div class="subject-icon">
                             <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
@@ -939,6 +944,9 @@
             </div>
         </div>
 
+        <section id="tab-speaking" class="tab-content" aria-label="Speaking Practice">
+            <iframe id="speaking-frame" title="Speaking Practice" data-src="mobile_speaking_app.html" allow="microphone" style="display:block;width:100%;height:calc(100dvh - 180px);min-height:360px;border:0;"></iframe>
+        </section>
     </main>
 
     <!-- Bottom Navigation -->
@@ -962,6 +970,10 @@
         <a href="#" class="nav-item" onclick="switchTab('writing')">
             <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
             Write
+        </a>
+        <a href="#" class="nav-item" onclick="switchTab('speaking');return false;">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V21h2v-3.07A7 7 0 0 0 19 11z"/></svg>
+            Speak
         </a>
     </nav>
 
@@ -8476,7 +8488,7 @@
         window.onload = () => {
             // Check version and clear cache if needed
             if (localStorage.getItem('mugrad_rev_version') !== APP_VERSION) {
-                localStorage.clear();
+                // Preserve Speaking settings and saved practice data on app updates.
                 localStorage.setItem('mugrad_rev_version', APP_VERSION);
             }
             
@@ -8551,17 +8563,25 @@
         }
         
         function switchTab(tabId) {
+            const speakingFrame = document.getElementById('speaking-frame');
+            if (state.activeTab === 'speaking' && tabId !== 'speaking') {
+                speakingFrame.contentWindow.postMessage({ type: 'mu-speaking-pause' }, '*');
+            }
+            if (tabId === 'speaking' && !speakingFrame.getAttribute('src')) {
+                speakingFrame.src = speakingFrame.dataset.src;
+            }
             // Stop audio if playing
             if (synth && synth.speaking) synth.cancel();
             
             // Update Navigation UI
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const navItems = document.querySelectorAll('.nav-item');
+            document.querySelectorAll('.bottom-nav > .nav-item').forEach(el => el.classList.remove('active'));
+            const navItems = document.querySelectorAll('.bottom-nav > .nav-item');
             if(tabId === 'dashboard') navItems[0].classList.add('active');
             if(tabId === 'listening') navItems[1].classList.add('active');
             if(tabId === 'reading') navItems[2].classList.add('active');
             if(tabId === 'grammar') navItems[3].classList.add('active');
             if(tabId === 'writing') navItems[4].classList.add('active');
+            if(tabId === 'speaking') navItems[5].classList.add('active');
             
             // Update Content UI
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
