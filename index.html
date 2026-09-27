@@ -734,10 +734,17 @@
         .tutorial-step-number { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; background:rgba(59,130,246,.2); color:var(--primary); font-weight:700; }
         .tutorial-example { margin-top:10px; padding:12px; border-left:3px solid var(--accent); background:rgba(16,185,129,.06); }
         .tutorial-rule-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px; }
+        .tutorial-intro-template { margin:16px 0 20px; padding:16px; border:1px solid rgba(59,130,246,.42); border-left:3px solid var(--primary); background:rgba(59,130,246,.08); }
+        .tutorial-intro-template h4 { margin:0 0 8px; color:var(--primary); }
+        .tutorial-intro-template code { display:block; white-space:pre-wrap; font:inherit; line-height:1.75; color:var(--text); }
+        .writing-memory-kit { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:12px; }
+        .writing-memory-item { padding:10px 12px; border:1px solid var(--border); border-radius:6px; background:rgba(15,23,42,.4); }
+        .writing-memory-item strong { display:block; color:var(--accent); margin-bottom:4px; }
+        .writing-memory-item code { color:var(--text); font:inherit; overflow-wrap:anywhere; }
         .tutorial-rule-grid .writing-rule { padding:12px; border:1px solid var(--border); border-radius:8px; }
         .tutorial-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
         .item-pager[hidden] { display:none !important; }
-        @media (max-width:600px) { .tutorial-rule-grid { grid-template-columns:1fr; } }
+        @media (max-width:600px) { .tutorial-rule-grid, .writing-memory-kit { grid-template-columns:1fr; } }
         #essay-word-tooltip { position:fixed; z-index:10000; width:max-content; max-width:min(380px,calc(100vw - 16px)); max-height:calc(100dvh - 16px); overflow-y:auto; padding:12px 16px; border:1px solid #10b981; border-radius:8px; background:#102c29; color:#fff; font-size:15px; line-height:1.7; box-shadow:0 4px 18px #0006; overflow-wrap:anywhere; pointer-events:none; }
         #essay-word-tooltip[hidden] { display:none; }
         .essay-full-translation { margin:-8px 0 24px; }
@@ -9789,13 +9796,16 @@ const ESSAY_PARAGRAPHS_TH = {
   ]
 ];
         function renderWritingPhraseBank() {
-            return '<div class="writing-phrase-bank">' + WRITING_PHRASE_GROUPS.map((group, index) =>
-                '<details class="phrase-category"' + (index === 0 ? ' open' : '') + '><summary>' +
-                essayEscape(group[0]) + ' (' + group[2].length + ')</summary><p class="phrase-guidance" lang="th">' +
-                essayEscape(group[1]) + '</p><dl class="phrase-entries">' + group[2].map(entry =>
-                    '<div><dt>' + essayEscape(entry[0]) + '</dt><dd lang="th">' + essayEscape(entry[1]) +
-                    '</dd><dd class="phrase-example" lang="en">' + essayEscape(entry[2]) + '</dd></div>'
-                ).join('') + '</dl></details>'
+            const phrases = [
+                ['เหตุผล', 'because + S + V'],
+                ['ตัวอย่าง', 'For example, + S + V'],
+                ['ผลลัพธ์', 'As a result, + S + V'],
+                ['ขัดแย้ง', 'However, + S + V'],
+                ['ความเห็น', 'I agree/disagree because ...'],
+                ['สรุป', 'In conclusion, ...']
+            ];
+            return '<div class="writing-memory-kit" lang="th">' + phrases.map(phrase =>
+                '<div class="writing-memory-item"><strong>' + essayEscape(phrase[0]) + '</strong><code lang="en">' + essayEscape(phrase[1]) + '</code></div>'
             ).join('') + '</div>';
         }
 const writingDrafts = {};
@@ -9987,6 +9997,7 @@ const writingDrafts = {};
                 '<h3>Writing Tutorial · ก่อนเริ่มเขียนจริง</h3>' +
                 '<label for="writing-tutorial-topic-select">เลือกหัวข้อที่จะใช้ฝึก</label><select id="writing-tutorial-topic-select" class="page-select" style="width:100%; margin:8px 0 12px;" onchange="goToItem(\'writing\', this.value)">' +
                 DB.writing.map((topic, index) => '<option value="' + index + '"' + (index === state.writing.index ? ' selected' : '') + '>Topic ' + (index + 1) + ': ' + essayEscape(topic.title) + '</option>').join('') + '</select>' +
+                '<section class="tutorial-intro-template"><h4>จำ Intro นี้ก่อน</h4><p>จำ 3 ประโยคแรกให้ได้ แล้วเลือก “ประโยคสุดท้าย” ให้ตรงชนิดของโจทย์</p><code lang="en">In today\'s world, [TOPIC] has become an increasingly important issue. Many people [GENERAL SITUATION / WHAT PEOPLE DO] because [REASON 1] and [REASON 2]. However, this issue can have both positive and negative effects on individuals and society.</code><p><strong>เลือกปิดบทนำเพียง 1 แบบ:</strong></p><ul><li lang="en">Agree / Disagree: This essay will discuss why I agree/disagree with this idea.</li><li lang="en">Problem &amp; Solution: This essay will discuss the main problems related to [topic] and possible solutions to address them.</li><li lang="en">Advantages &amp; Disadvantages: This essay will discuss the advantages and disadvantages of [topic].</li><li lang="en">General: This essay will discuss [MAIN POINT 1], [MAIN POINT 2], and [MAIN POINT 3].</li></ul><details><summary>ตัวอย่าง: Self-medication</summary><p lang="en">In today\'s world, self-medication has become an increasingly common practice. Many people choose to treat themselves because it is convenient and can save time and money. However, self-medication can have both positive and negative effects on individuals and society. This essay will discuss the causes and effects of self-medication.</p></details></section>' +
                 '<p>เป้าหมายคือเขียนให้ตอบโจทย์ชัดเจน โครงสร้างครบ และ grammar ผิดให้น้อยที่สุด ไม่จำเป็นต้องใช้ประโยคยาวหรือศัพท์ยากทุกประโยค</p>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">1</div><div><h4>อ่านโจทย์และวงคำสั่ง</h4><p>โจทย์ปัจจุบัน: <span lang="en">' + esc(current.prompt) + '</span></p><p>ข้อนี้เป็นประเภท <strong>' + esc((WRITING_TASK_PROFILES[coach.type] || {}).label || 'Essay') + '</strong> จึงต้องตอบให้ครบตามที่โจทย์ถาม</p><div class="tutorial-example">ก่อนเขียน ให้ระบุว่าจะตอบอะไรบ้าง เช่น ข้อดี–ข้อเสีย / สาเหตุ–วิธีแก้ / สองมุมมอง / ความเห็นของเรา</div></div></div>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">2</div><div><h4>วาง 4 ย่อหน้า</h4><ol><li><strong>Introduction:</strong> เกริ่นหัวข้อ + ตอบหรือบอกแนวทาง</li><li><strong>Body 1:</strong> ใจความแรก → เหตุผล → ตัวอย่าง → ผลลัพธ์</li><li><strong>Body 2:</strong> ใจความที่สอง → เหตุผล → ตัวอย่าง → ผลลัพธ์</li><li><strong>Conclusion:</strong> สรุปคำตอบเดิม โดยไม่เพิ่มเหตุผลใหม่</li></ol><p>ถ้าโจทย์มี 2 มุมมอง ใช้ Body 1 สำหรับมุมมองแรก และ Body 2 สำหรับอีกมุมมองก่อนยืนยันความเห็นในบทสรุป</p></div></div>' +
@@ -10058,16 +10069,8 @@ const writingDrafts = {};
                     html += `
                         <h4 style="margin: 15px 0 10px;">Vocabulary Coach</h4>
                         <div class="vocab-upgrade">
-                            <strong>Professional upgrade · 60 phrases</strong>
-                            <div style="color: var(--text-muted); margin-top: 5px;">เลือกใช้วลีที่เป็นภาษาเขียนแทนคำทั่วไป แต่ควรใช้ให้ตรงความหมาย ไม่จำเป็นต้องใช้ศัพท์ยากทุกประโยค</div>
-                            <div class="vocab-upgrade-list">
-                                <span>I think → From my perspective</span>
-                                <span>because → This is mainly because</span>
-                                <span>also → Furthermore</span>
-                                <span>so → Consequently</span>
-                                <span>bad effect → adverse effect</span>
-                                <span>big problem → significant challenge</span>
-                            </div>
+                            <strong>จำแค่นี้ก่อน · 6 วลีหลัก</strong>
+                            <div style="color: var(--text-muted); margin-top: 5px;">ไม่ต้องท่องวลีจำนวนมาก ใช้คำเชื่อมเหล่านี้ให้ถูกและเขียนเหตุผลของตัวเองให้ชัดก่อน</div>
                             ${renderWritingPhraseBank()}
                         </div>
                         <div class="vocab-coach-grid">`;
