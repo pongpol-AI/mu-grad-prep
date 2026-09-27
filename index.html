@@ -729,6 +729,15 @@
         .writing-answer-coach dd { margin:6px 0 16px; }
         .writing-rule { padding:12px 0; }
         .writing-coach-source { font-size:13px; color:var(--text-muted); }
+        .writing-tutorial { margin-top: 20px; }
+        .tutorial-step { display:grid; grid-template-columns:42px 1fr; gap:14px; padding:18px 0; border-bottom:1px solid var(--border); }
+        .tutorial-step-number { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; background:rgba(59,130,246,.2); color:var(--primary); font-weight:700; }
+        .tutorial-example { margin-top:10px; padding:12px; border-left:3px solid var(--accent); background:rgba(16,185,129,.06); }
+        .tutorial-rule-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px; }
+        .tutorial-rule-grid .writing-rule { padding:12px; border:1px solid var(--border); border-radius:8px; }
+        .tutorial-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+        .item-pager[hidden] { display:none !important; }
+        @media (max-width:600px) { .tutorial-rule-grid { grid-template-columns:1fr; } }
         #essay-word-tooltip { position:fixed; z-index:10000; width:max-content; max-width:min(380px,calc(100vw - 16px)); max-height:calc(100dvh - 16px); overflow-y:auto; padding:12px 16px; border:1px solid #10b981; border-radius:8px; background:#102c29; color:#fff; font-size:15px; line-height:1.7; box-shadow:0 4px 18px #0006; overflow-wrap:anywhere; pointer-events:none; }
         #essay-word-tooltip[hidden] { display:none; }
         .essay-full-translation { margin:-8px 0 24px; }
@@ -952,7 +961,8 @@
             <div class="glass-card">
                 <h2>Writing Practice</h2>
                 <div class="mode-selector">
-                    <div class="mode-btn active" onclick="setMode('writing', 'review')" id="writing-mode-review">Review Mode</div>
+                    <div class="mode-btn active" onclick="setMode('writing', 'tutorial')" id="writing-mode-tutorial">Tutorial</div>
+                    <div class="mode-btn" onclick="setMode('writing', 'review')" id="writing-mode-review">Review Mode</div>
                     <div class="mode-btn" onclick="setMode('writing', 'test')" id="writing-mode-test">Practice Mode</div>
                 </div>
                 
@@ -8409,7 +8419,7 @@
             listening: { index: 0, mode: 'review' },
             reading: { index: 0, mode: 'review' },
             grammar: { index: 0, mode: 'review' },
-            writing: { index: 0, mode: 'review' }
+            writing: { index: 0, mode: 'tutorial' }
         };
 
         const WRITING_VOCAB_TH = {
@@ -8677,9 +8687,9 @@
             state[subject].mode = mode;
             
             // Update Mode UI
-            document.getElementById(`${subject}-mode-review`).classList.remove('active');
-            document.getElementById(`${subject}-mode-test`).classList.remove('active');
-            document.getElementById(`${subject}-mode-${mode}`).classList.add('active');
+            document.querySelectorAll(`[id^="${subject}-mode-"]`).forEach(button => button.classList.remove('active'));
+            const modeButton = document.getElementById(`${subject}-mode-${mode}`);
+            if (modeButton) modeButton.classList.add('active');
             
             // Re-render component
             if (subject === 'listening') renderListening();
@@ -9963,6 +9973,33 @@ const writingDrafts = {};
             output.innerHTML = renderWritingFeedback(basicWritingReview(text, item), 'ผลตรวจเบื้องต้น');
             status.textContent = 'ตรวจเสร็จแล้ว · ตรวจภายในเครื่อง';
         }
+        function renderWritingTutorial() {
+            const current = DB.writing[state.writing.index];
+            const coach = WRITING_ANSWER_COACH[current.id];
+            const esc = essayEscape;
+            const rules = [
+                ['can / should / may + V1', 'People can compare prices.', 'People can compares prices.'],
+                ['want / need / choose + to + V1', 'People choose to compare sources.', 'People choose compare sources.'],
+                ['by / without / instead of + V-ing', 'People save time by comparing prices.', 'People save time by compare prices.'],
+                ['because / although / if + S + V', 'Although reviews are useful, they can be biased.', 'Although reviews are useful, but they can be biased.']
+            ];
+            return '<section class="writing-tutorial" lang="th">' +
+                '<h3>Writing Tutorial · ก่อนเริ่มเขียนจริง</h3>' +
+                '<label for="writing-tutorial-topic-select">เลือกหัวข้อที่จะใช้ฝึก</label><select id="writing-tutorial-topic-select" class="page-select" style="width:100%; margin:8px 0 12px;" onchange="goToItem(\'writing\', this.value)">' +
+                DB.writing.map((topic, index) => '<option value="' + index + '"' + (index === state.writing.index ? ' selected' : '') + '>Topic ' + (index + 1) + ': ' + essayEscape(topic.title) + '</option>').join('') + '</select>' +
+                '<p>เป้าหมายคือเขียนให้ตอบโจทย์ชัดเจน โครงสร้างครบ และ grammar ผิดให้น้อยที่สุด ไม่จำเป็นต้องใช้ประโยคยาวหรือศัพท์ยากทุกประโยค</p>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">1</div><div><h4>อ่านโจทย์และวงคำสั่ง</h4><p>โจทย์ปัจจุบัน: <span lang="en">' + esc(current.prompt) + '</span></p><p>ข้อนี้เป็นประเภท <strong>' + esc((WRITING_TASK_PROFILES[coach.type] || {}).label || 'Essay') + '</strong> จึงต้องตอบให้ครบตามที่โจทย์ถาม</p><div class="tutorial-example">ก่อนเขียน ให้ระบุว่าจะตอบอะไรบ้าง เช่น ข้อดี–ข้อเสีย / สาเหตุ–วิธีแก้ / สองมุมมอง / ความเห็นของเรา</div></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">2</div><div><h4>วาง 4 ย่อหน้า</h4><ol><li><strong>Introduction:</strong> เกริ่นหัวข้อ + ตอบหรือบอกแนวทาง</li><li><strong>Body 1:</strong> ใจความแรก → เหตุผล → ตัวอย่าง → ผลลัพธ์</li><li><strong>Body 2:</strong> ใจความที่สอง → เหตุผล → ตัวอย่าง → ผลลัพธ์</li><li><strong>Conclusion:</strong> สรุปคำตอบเดิม โดยไม่เพิ่มเหตุผลใหม่</li></ol><p>ถ้าโจทย์มี 2 มุมมอง ใช้ Body 1 สำหรับมุมมองแรก และ Body 2 สำหรับอีกมุมมองก่อนยืนยันความเห็นในบทสรุป</p></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">3</div><div><h4>สร้าง Body Paragraph แบบปลอดภัย</h4><p>ใช้ลำดับ <strong>ใจความ → เหตุผล → ตัวอย่าง → ผลลัพธ์</strong> จะช่วยให้ย่อหน้าไม่ลอย</p><div class="tutorial-example"><p lang="en"><strong>Point:</strong> ' + renderWritingWords(coach.steps[0][0]) + '</p><p lang="en"><strong>Reason:</strong> ' + renderWritingWords(coach.steps[1][0]) + '</p><p lang="en"><strong>Example:</strong> ' + renderWritingWords(coach.steps[2][0]) + '</p><p lang="en"><strong>Result:</strong> ' + renderWritingWords(coach.steps[3][0]) + '</p></div><p>ตัวอย่างนี้เป็นแค่ 1 ประเด็นของหัวข้อปัจจุบัน อย่าคัดลอกทั้งดุ้น ให้เปลี่ยนเป็นความคิดของตัวเอง</p></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">4</div><div><h4>เลือกคำเชื่อมให้ตรงหน้าที่</h4><dl><dt><strong>because</strong> + ประโยค</dt><dd lang="en">People compare sources because they need reliable information.</dd><dt><strong>For example</strong> + ประโยค</dt><dd lang="en">For example, a student may compare two reviews.</dd><dt><strong>As a result</strong> + ประโยค</dt><dd lang="en">As a result, the student may make a better decision.</dd><dt><strong>However</strong> + ประโยคใหม่ที่ขัดแย้ง</dt><dd lang="en">Reviews can help. However, some reviews may be biased.</dd></dl><p>ใช้คำเชื่อมเมื่อความสัมพันธ์ของความคิดต้องการมัน ไม่ต้องใส่ทุกประโยค</p></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">5</div><div><h4>เช็ก 4 กฎก่อนกดตรวจงาน</h4><div class="tutorial-rule-grid">' +
+                rules.map(rule => '<div class="writing-rule"><strong>' + esc(rule[0]) + '</strong><p lang="en">ถูก: ' + esc(rule[1]) + '</p><p lang="en">ระวัง: ' + esc(rule[2]) + '</p></div>').join('') +
+                '</div><p>ตรวจเพิ่ม: ประธาน–กริยา, a/an/the, เอกพจน์–พหูพจน์, และตอบครบทุกส่วนของโจทย์</p></div></div>' +
+                '<div class="tutorial-actions"><button type="button" class="btn btn-outline" onclick="setMode(\'writing\', \'review\')">ดูตัวอย่างและแผนตอบ</button><button type="button" class="btn" onclick="setMode(\'writing\', \'test\')">เริ่มฝึกเขียนข้อนี้</button></div>' +
+                '<p class="writing-coach-source">สรุปและเรียบเรียงจาก Writing MU practice.pdf หน้า 1–9; ใช้เป็นแนวทางฝึก ไม่ใช่เกณฑ์คะแนนอย่างเป็นทางการ</p></section>';
+        }
+
+
         function renderWriting() {
             hideEssayWord();
             const container = document.getElementById('writing-container');
@@ -9972,6 +10009,12 @@ const writingDrafts = {};
             const idx = state.writing.index;
             const item = data[idx];
             const mode = state.writing.mode;
+            const pager = document.querySelector('#tab-writing .item-pager');
+            if (pager) pager.hidden = mode === 'tutorial';
+            if (mode === 'tutorial') {
+                container.innerHTML = renderWritingTutorial();
+                return;
+            }
             
             let html = `<h3>Topic ${idx + 1} of ${data.length}: ${item.title}</h3>`;
             
