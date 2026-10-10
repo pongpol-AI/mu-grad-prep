@@ -10095,6 +10095,37 @@ const writingDrafts = {};
             }, 300);
         }
 
+        function printWritingHtml(html) {
+            const frame = document.createElement('iframe');
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none;';
+            frame.onload = () => window.setTimeout(() => {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+                window.setTimeout(() => frame.remove(), 2000);
+            }, 250);
+            frame.srcdoc = html;
+            document.body.appendChild(frame);
+        }
+
+        function exportWritingPdf() {
+            const item = DB.writing[state.writing.index];
+            const sample = buildExamLengthSample(item);
+            const vocabulary = (item.useful_vocab || []).map(word => '<li>' + essayEscape(word) + '</li>').join('');
+            const paragraphs = sample.split(/\n\s*\n/).filter(Boolean).map(paragraph => '<p>' + essayEscape(paragraph) + '</p>').join('');
+            printWritingHtml(`<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:18mm}body{font-family:Arial;color:#111827;line-height:1.65;font-size:11pt}h1{font-size:20pt}h2{font-size:14pt;margin-top:26px}.prompt{padding:14px;background:#f3f4f6;border-left:4px solid #2563eb}ul{columns:2}p{margin:0 0 14px}.words{color:#4b5563}</style></head><body><h1>${essayEscape(item.title)}</h1><div class="prompt"><strong>Prompt:</strong> ${essayEscape(item.prompt)}</div><h2>Key Vocabulary</h2><ul>${vocabulary}</ul><h2>Sample Answer</h2><div class="words">${sample.trim().split(/\s+/).length} words</div>${paragraphs}</body></html>`);
+        }
+
+        function exportAllWritingPdf() {
+            const sections = DB.writing.map((item, index) => {
+                const sample = buildExamLengthSample(item);
+                const vocabulary = (item.useful_vocab || []).map(word => '<li>' + essayEscape(word) + '</li>').join('');
+                const paragraphs = sample.split(/\n\s*\n/).filter(Boolean).map(paragraph => '<p>' + essayEscape(paragraph) + '</p>').join('');
+                return '<section class="topic"><h1>Topic ' + (index + 1) + ': ' + essayEscape(item.title) + '</h1><div class="prompt"><strong>Prompt:</strong> ' + essayEscape(item.prompt) + '</div><h2>Key Vocabulary</h2><ul>' + vocabulary + '</ul><h2>Sample Answer</h2><div class="words">' + sample.trim().split(/\s+/).length + ' words</div>' + paragraphs + '</section>';
+            }).join('');
+            printWritingHtml(`<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:18mm}body{font-family:Arial;color:#111827;line-height:1.6;font-size:10.5pt}h1{font-size:18pt}h2{font-size:13pt;margin-top:22px}.topic{break-after:page;page-break-after:always}.topic:last-child{break-after:auto;page-break-after:auto}.prompt{padding:12px;background:#f3f4f6;border-left:4px solid #2563eb}ul{columns:2}p{margin:0 0 13px}.words{color:#4b5563}</style></head><body>${sections}</body></html>`);
+        }
+
 
         function renderWriting() {
             hideEssayWord();
