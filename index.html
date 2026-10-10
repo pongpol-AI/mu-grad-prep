@@ -10062,15 +10062,37 @@ const writingDrafts = {};
             const sample = buildExamLengthSample(item);
             const vocabulary = (item.useful_vocab || []).map(word => '<li>' + essayEscape(word) + '</li>').join('');
             const paragraphs = sample.split(/\n\s*\n/).filter(Boolean).map(paragraph => '<p>' + essayEscape(paragraph) + '</p>').join('');
-            const exportWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=760');
+            const exportWindow = window.open('', '_blank', 'width=900,height=760');
             if (!exportWindow) {
                 alert('Please allow pop-ups to export this PDF.');
                 return;
             }
-            exportWindow.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MU GRAD Writing - ${essayEscape(item.title)}</title><style>@page { size: A4; margin: 18mm; } body { font-family: Arial, sans-serif; color: #111827; line-height: 1.65; font-size: 11pt; } h1 { font-size: 20pt; margin: 0 0 6px; } h2 { font-size: 14pt; margin: 26px 0 8px; } .prompt { padding: 14px; background: #f3f4f6; border-left: 4px solid #2563eb; } ul { columns: 2; padding-left: 22px; } li { margin: 3px 0; } p { margin: 0 0 14px; text-align: left; } .words { color: #4b5563; font-size: 10pt; } @media print { body { font-size: 10.5pt; } }</style></head><body><h1>${essayEscape(item.title)}</h1><div class="prompt"><strong>Prompt:</strong> ${essayEscape(item.prompt)}</div><h2>Key Vocabulary</h2><ul>${vocabulary}</ul><h2>Sample Answer</h2><div class="words">${sample.trim().split(/\s+/).length} words</div>${paragraphs}</body></html>`);
+            exportWindow.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MU GRAD Writing - ${essayEscape(item.title)}</title><style>@page { size: A4; margin: 18mm; } body { font-family: Arial, sans-serif; color: #111827; line-height: 1.65; font-size: 11pt; } h1 { font-size: 20pt; margin: 0 0 6px; } h2 { font-size: 14pt; margin: 26px 0 8px; } .prompt { padding: 14px; background: #f3f4f6; border-left: 4px solid #2563eb; } ul { columns: 2; padding-left: 22px; } li { margin: 3px 0; } p { margin: 0 0 14px; text-align: left; } .words { color: #4b5563; font-size: 10pt; } .export-actions { margin: 0 0 18px; } button { border: 0; border-radius: 5px; padding: 10px 14px; background: #2563eb; color: #fff; font: inherit; cursor: pointer; } @media print { .export-actions { display: none; } body { font-size: 10.5pt; } }</style></head><body><div class="export-actions"><button type="button" onclick="window.print()">Print / Save as PDF</button></div><h1>${essayEscape(item.title)}</h1><div class="prompt"><strong>Prompt:</strong> ${essayEscape(item.prompt)}</div><h2>Key Vocabulary</h2><ul>${vocabulary}</ul><h2>Sample Answer</h2><div class="words">${sample.trim().split(/\s+/).length} words</div>${paragraphs}</body></html>`);
             exportWindow.document.close();
-            exportWindow.focus();
-            exportWindow.onload = () => exportWindow.print();
+            window.setTimeout(() => {
+                exportWindow.focus();
+                exportWindow.print();
+            }, 250);
+        }
+
+        function exportAllWritingPdf() {
+            const sections = DB.writing.map((item, index) => {
+                const sample = buildExamLengthSample(item);
+                const vocabulary = (item.useful_vocab || []).map(word => '<li>' + essayEscape(word) + '</li>').join('');
+                const paragraphs = sample.split(/\n\s*\n/).filter(Boolean).map(paragraph => '<p>' + essayEscape(paragraph) + '</p>').join('');
+                return '<section class="topic"><h1>Topic ' + (index + 1) + ': ' + essayEscape(item.title) + '</h1><div class="prompt"><strong>Prompt:</strong> ' + essayEscape(item.prompt) + '</div><h2>Key Vocabulary</h2><ul>' + vocabulary + '</ul><h2>Sample Answer</h2><div class="words">' + sample.trim().split(/\s+/).length + ' words</div>' + paragraphs + '</section>';
+            }).join('');
+            const exportWindow = window.open('', '_blank', 'width=900,height=760');
+            if (!exportWindow) {
+                alert('Please allow pop-ups to export this PDF.');
+                return;
+            }
+            exportWindow.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MU GRAD Writing - All Topics</title><style>@page { size: A4; margin: 18mm; } body { font-family: Arial, sans-serif; color: #111827; line-height: 1.6; font-size: 10.5pt; } h1 { font-size: 18pt; margin: 0 0 8px; } h2 { font-size: 13pt; margin: 22px 0 7px; } .topic { break-after: page; page-break-after: always; } .topic:last-child { break-after: auto; page-break-after: auto; } .prompt { padding: 12px; background: #f3f4f6; border-left: 4px solid #2563eb; } ul { columns: 2; padding-left: 22px; } li { margin: 3px 0; } p { margin: 0 0 13px; } .words { color: #4b5563; font-size: 10pt; } .export-actions { margin: 0 0 18px; } button { border:0; border-radius:5px; padding:10px 14px; background:#2563eb; color:#fff; font:inherit; cursor:pointer; } @media print { .export-actions { display:none; } }</style></head><body><div class="export-actions"><button type="button" onclick="window.print()">Print / Save as PDF</button></div>${sections}</body></html>`);
+            exportWindow.document.close();
+            window.setTimeout(() => {
+                exportWindow.focus();
+                exportWindow.print();
+            }, 300);
         }
 
 
@@ -10106,7 +10128,7 @@ const writingDrafts = {};
             
             if (item.source_note && mode !== 'review') html += '<p lang="th" class="writing-coach-source">' + essayEscape(item.source_note) + '</p>';
             if (mode === 'review') {
-                html += '<div style="margin: 16px 0;"><button type="button" class="btn btn-outline" onclick="exportWritingPdf()">Export PDF</button></div>';
+                html += '<div style="margin: 16px 0; display:flex; gap:10px; flex-wrap:wrap;"><button type="button" class="btn btn-outline" onclick="exportWritingPdf()">Export PDF</button><button type="button" class="btn btn-outline" onclick="exportAllWritingPdf()">Export All · One PDF</button></div>';
                 if (item.useful_vocab) {
                     html += '<h4 style="margin: 15px 0 10px;">Key Vocabulary</h4><div class="memory-vocab-list">';
                     item.useful_vocab.forEach(word => {
