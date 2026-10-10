@@ -741,6 +741,9 @@
         .writing-memory-item { padding:10px 12px; border:1px solid var(--border); border-radius:6px; background:rgba(15,23,42,.4); }
         .writing-memory-item strong { display:block; color:var(--accent); margin-bottom:4px; }
         .writing-memory-item code { color:var(--text); font:inherit; overflow-wrap:anywhere; }
+        .memory-vocab-list { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 18px; }
+        .memory-vocab-list span { padding:9px 12px; border:1px solid rgba(16,185,129,.5); border-radius:6px; background:rgba(16,185,129,.08); color:var(--accent); font-weight:600; }
+        .memory-vocab-list small { display:block; margin-top:3px; color:var(--text-muted); font-weight:400; }
         .tutorial-rule-grid .writing-rule { padding:12px; border:1px solid var(--border); border-radius:8px; }
         .tutorial-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
         .item-pager[hidden] { display:none !important; }
@@ -10010,6 +10013,41 @@ const writingDrafts = {};
                 '<p class="writing-coach-source">สรุปและเรียบเรียงจาก Writing MU practice.pdf หน้า 1–9; ใช้เป็นแนวทางฝึก ไม่ใช่เกณฑ์คะแนนอย่างเป็นทางการ</p></section>';
         }
 
+        function buildExamLengthSample(item) {
+            const paragraphs = item.sample_essay.trim().split(/\n\s*\n/).filter(Boolean);
+            const additions = [
+                'Another important consideration is the long-term effect of this issue. People should consider how it influences daily decisions, available resources, and future opportunities. For example, an individual may need to compare reliable information before making a decision. This approach can prevent unnecessary problems and encourage more responsible behaviour.',
+                'A balanced approach is also necessary. Although this issue may offer some benefits, its possible limitations should not be ignored. Individuals and organisations can reduce risks by planning carefully and seeking appropriate support. Consequently, the positive effects are more likely to be shared fairly.',
+                'Furthermore, education and clear communication can improve the situation. When people understand both the benefits and the risks, they can make more informed choices. This is especially important for people who have limited experience or access to support. In this way, practical action can lead to better outcomes over time.',
+                'Governments, schools, and communities also have a role to play. They can provide reliable guidance and create conditions that help people make safe and realistic choices. Such support can make a meaningful difference in everyday life.'
+            ];
+            const wordCount = text => text.trim().split(/\s+/).filter(Boolean).length;
+            const conclusionIndex = paragraphs.findIndex(paragraph => /^(In conclusion|To sum up|To conclude|Overall|In summary)\b/i.test(paragraph.trim()));
+            const insertAt = conclusionIndex === -1 ? paragraphs.length : conclusionIndex;
+            let additionIndex = 0;
+            while (wordCount(paragraphs.join('\n\n')) < 330 && additionIndex < additions.length) {
+                paragraphs.splice(insertAt + additionIndex, 0, additions[additionIndex]);
+                additionIndex++;
+            }
+            return paragraphs.join('\n\n');
+        }
+
+        function exportWritingPdf() {
+            const item = DB.writing[state.writing.index];
+            const sample = buildExamLengthSample(item);
+            const vocabulary = (item.useful_vocab || []).map(word => '<li>' + essayEscape(word) + '</li>').join('');
+            const paragraphs = sample.split(/\n\s*\n/).filter(Boolean).map(paragraph => '<p>' + essayEscape(paragraph) + '</p>').join('');
+            const exportWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=760');
+            if (!exportWindow) {
+                alert('Please allow pop-ups to export this PDF.');
+                return;
+            }
+            exportWindow.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MU GRAD Writing - ${essayEscape(item.title)}</title><style>@page { size: A4; margin: 18mm; } body { font-family: Arial, sans-serif; color: #111827; line-height: 1.65; font-size: 11pt; } h1 { font-size: 20pt; margin: 0 0 6px; } h2 { font-size: 14pt; margin: 26px 0 8px; } .prompt { padding: 14px; background: #f3f4f6; border-left: 4px solid #2563eb; } ul { columns: 2; padding-left: 22px; } li { margin: 3px 0; } p { margin: 0 0 14px; text-align: left; } .words { color: #4b5563; font-size: 10pt; } @media print { body { font-size: 10.5pt; } }</style></head><body><h1>${essayEscape(item.title)}</h1><div class="prompt"><strong>Prompt:</strong> ${essayEscape(item.prompt)}</div><h2>Key Vocabulary</h2><ul>${vocabulary}</ul><h2>Sample Answer</h2><div class="words">${sample.trim().split(/\s+/).length} words</div>${paragraphs}</body></html>`);
+            exportWindow.document.close();
+            exportWindow.focus();
+            exportWindow.onload = () => exportWindow.print();
+        }
+
 
         function renderWriting() {
             hideEssayWord();
@@ -10030,59 +10068,33 @@ const writingDrafts = {};
             let html = `<h3>Topic ${idx + 1} of ${data.length}: ${item.title}</h3>`;
             
             let toggleHtml = `<div class="toggle-group" style="align-items: center; justify-content: flex-end;">`;
-            if (item.prompt_th || (item.outline_th && mode === 'review')) {
+            if (item.prompt_th) {
                 toggleHtml += `<label class="translation-toggle" style="margin:0;"><input type="checkbox" ${showTranslation ? 'checked' : ''} onchange="toggleTranslation()"> Show Thai</label>`;
             }
             toggleHtml += `</div>`;
             html += toggleHtml;
             
             html += `<div class="question-card">
-                        <strong>Prompt:</strong> ${item.prompt}
+                        <strong>Prompt:</strong> ${renderWritingWords(item.prompt)}
                         ${(item.prompt_th && showTranslation) ? `<div class="passage-th" style="margin-top:10px; font-size:14px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px;">${item.prompt_th}</div>` : ''}
                     </div>`;
             
-            if (item.source_note) html += '<p lang="th" class="writing-coach-source">' + essayEscape(item.source_note) + '</p>';
-            html += renderWritingAnswerCoach(item);
+            if (item.source_note && mode !== 'review') html += '<p lang="th" class="writing-coach-source">' + essayEscape(item.source_note) + '</p>';
             if (mode === 'review') {
-                if (item.outline) {
-                    const th = item.outline_th || {};
-                    html += `
-                    <div class="glass-card" style="background: rgba(16, 185, 129, 0.05);">
-                        <h4 style="color: var(--accent); margin-bottom: 10px;">Outline Ideas</h4>
-                        <p><strong>Intro:</strong> ${item.outline.introduction || ''}</p>
-                        ${(th.introduction && showTranslation) ? `<p class="passage-th">${th.introduction}</p>` : ''}
-                        
-                        <p><strong>Body 1:</strong> ${item.outline.body1 || ''}</p>
-                        ${(th.body1 && showTranslation) ? `<p class="passage-th">${th.body1}</p>` : ''}
-                        
-                        <p><strong>Body 2:</strong> ${item.outline.body2 || ''}</p>
-                        ${(th.body2 && showTranslation) ? `<p class="passage-th">${th.body2}</p>` : ''}
-                        ${item.outline.body3 ? `<p><strong>Body 3:</strong> ${item.outline.body3}</p>` : ''}
-                        ${(th.body3 && showTranslation) ? `<p class="passage-th">${th.body3}</p>` : ''}
-                        
-                        <p><strong>Conclusion:</strong> ${item.outline.conclusion || ''}</p>
-                        ${(th.conclusion && showTranslation) ? `<p class="passage-th">${th.conclusion}</p>` : ''}
-                    </div>`;
-                }
-                
+                html += '<div style="margin: 16px 0;"><button type="button" class="btn btn-outline" onclick="exportWritingPdf()">Export PDF</button></div>';
                 if (item.useful_vocab) {
-                    html += `
-                        <h4 style="margin: 15px 0 10px;">Vocabulary Coach</h4>
-                        <div class="vocab-upgrade">
-                            <strong>จำแค่นี้ก่อน · 6 วลีหลัก</strong>
-                            <div style="color: var(--text-muted); margin-top: 5px;">ไม่ต้องท่องวลีจำนวนมาก ใช้คำเชื่อมเหล่านี้ให้ถูกและเขียนเหตุผลของตัวเองให้ชัดก่อน</div>
-                            ${renderWritingPhraseBank()}
-                        </div>
-                        <div class="vocab-coach-grid">`;
+                    html += '<h4 style="margin: 15px 0 10px;">Key Vocabulary</h4><div class="memory-vocab-list">';
                     item.useful_vocab.forEach(word => {
-                        html += `<div class="vocab-coach-item"><strong>${word}</strong><small>${getWritingVocabThai(word)}</small></div>`;
+                        html += `<span lang="en">${word}<small lang="th">${getWritingVocabThai(word)}</small></span>`;
                     });
                     html += `</div>`;
                 }
                 
                 if (item.sample_essay) {
-                    html += `<h4 style="margin: 15px 0 10px;">Sample Essay (${item.sample_essay.trim().split(/\s+/).length} words)</h4>
-                    <div class="passage-text" style="max-height: none;">${renderEssayTranslation(item)}</div>`;
+                    const examSample = buildExamLengthSample(item);
+                    const sampleItem = { ...item, sample_essay: examSample };
+                    html += `<h4 style="margin: 15px 0 10px;">Sample Answer · ${examSample.trim().split(/\s+/).length} words</h4>
+                    <div class="passage-text" style="max-height: none;">${renderEssayTranslation(sampleItem)}</div>`;
                 }
                 
             } else {
