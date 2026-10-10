@@ -8457,8 +8457,33 @@
             'cyber threats': 'ภัยคุกคามทางไซเบอร์', 'vulnerable users': 'ผู้ใช้ที่มีความเสี่ยงสูง', 'verification code': 'รหัสยืนยันตัวตน', 'two-factor authentication': 'การยืนยันตัวตนสองขั้นตอน', 'privacy settings': 'การตั้งค่าความเป็นส่วนตัว', 'suspicious message': 'ข้อความน่าสงสัย', 'an additional layer of protection': 'การป้องกันเพิ่มเติมอีกชั้นหนึ่ง'
         };
 
+        const WRITING_FALLBACK_TH = {
+            'regard': 'มองว่า / ถือว่า', 'nowadays': 'ในปัจจุบัน', 'parents': 'ผู้ปกครอง',
+            'send': 'ส่ง', 'children': 'เด็ก ๆ', 'education': 'การศึกษา', 'return': 'กลับ',
+            'working': 'การทำงาน', 'face': 'เผชิญ', 'problems': 'ปัญหา', 'adjusting': 'การปรับตัว',
+            'challenges': 'ความท้าทาย', 'solutions': 'วิธีแก้ไข', 'adapt': 'ปรับตัว',
+            'benefits': 'ประโยชน์', 'limitations': 'ข้อจำกัด', 'advantages': 'ข้อดี',
+            'disadvantages': 'ข้อเสีย', 'drawbacks': 'ผลเสีย / ข้อด้อย', 'outweigh': 'มีน้ำหนักมากกว่า',
+            'issue': 'ประเด็น / ปัญหา', 'society': 'สังคม', 'individuals': 'บุคคล',
+            'significant': 'สำคัญมาก', 'effective': 'มีประสิทธิภาพ', 'reliable': 'น่าเชื่อถือ',
+            'responsible': 'รับผิดชอบ', 'opportunities': 'โอกาส', 'resources': 'ทรัพยากร',
+            'consequences': 'ผลที่ตามมา', 'circumstances': 'สถานการณ์ / เงื่อนไข',
+            'consider': 'พิจารณา', 'improve': 'พัฒนา / ทำให้ดีขึ้น', 'reduce': 'ลด',
+            'increase': 'เพิ่มขึ้น', 'support': 'สนับสนุน', 'prevent': 'ป้องกัน',
+            'encourage': 'ส่งเสริม', 'provide': 'จัดหา / ให้', 'require': 'ต้องการ / จำเป็นต้อง',
+            'affect': 'ส่งผลกระทบต่อ', 'access': 'การเข้าถึง', 'healthcare': 'การดูแลสุขภาพ',
+            'traditional': 'แบบดั้งเดิม', 'technology': 'เทคโนโลยี', 'translation': 'การแปลภาษา',
+            'context': 'บริบท', 'communication': 'การสื่อสาร', 'confidence': 'ความมั่นใจ',
+            'independent': 'เป็นอิสระ / ด้วยตนเอง', 'employment': 'การจ้างงาน / งาน',
+            'competitive': 'มีการแข่งขัน', 'consumers': 'ผู้บริโภค', 'businesses': 'ธุรกิจ',
+            'fair': 'เป็นธรรม', 'prices': 'ราคา', 'costs': 'ต้นทุน', 'convenient': 'สะดวก',
+            'essential': 'จำเป็นอย่างยิ่ง', 'especially': 'โดยเฉพาะ', 'therefore': 'ดังนั้น',
+            'however': 'อย่างไรก็ตาม', 'although': 'แม้ว่า', 'furthermore': 'นอกจากนี้'
+        };
+
         function getWritingVocabThai(word) {
-            return WRITING_VOCAB_TH[String(word).toLowerCase()] || ESSAY_WORD_DICTIONARY[String(word).toLowerCase()] || 'คำศัพท์สำคัญสำหรับหัวข้อนี้';
+            const key = String(word).toLowerCase().replaceAll('’', "'");
+            return WRITING_FALLBACK_TH[key] || WRITING_VOCAB_TH[key] || ESSAY_WORD_DICTIONARY[key] || 'คำศัพท์สำคัญสำหรับหัวข้อนี้';
         }
 
         const CRAM_KEY = 'mugrad_cram_stats_v1';
@@ -9365,7 +9390,7 @@ const ESSAY_PARAGRAPHS_TH = {
                 document.body.appendChild(tooltip);
             }
             const key = element.textContent.toLowerCase().replaceAll('’', "'");
-            const meaning = ESSAY_WORD_DICTIONARY[key] || WRITING_VOCAB_TH[key] || 'ยังไม่มีคำแปลสำหรับคำนี้';
+            const meaning = WRITING_FALLBACK_TH[key] || ESSAY_WORD_DICTIONARY[key] || WRITING_VOCAB_TH[key] || 'คำศัพท์สำคัญสำหรับหัวข้อนี้';
             tooltip.textContent = element.textContent + ' — ' + meaning;
             tooltip.hidden = false;
             tooltip.style.left = '8px';
