@@ -744,10 +744,23 @@
         .memory-vocab-list { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 18px; }
         .memory-vocab-list span { padding:9px 12px; border:1px solid rgba(16,185,129,.5); border-radius:6px; background:rgba(16,185,129,.08); color:var(--accent); font-weight:600; }
         .memory-vocab-list small { display:block; margin-top:3px; color:var(--text-muted); font-weight:400; }
+        .essay-memory-block { margin:14px 0; padding:18px; border:1px solid var(--border); border-radius:8px; }
+        .essay-memory-block h5 { margin:0 0 10px; font-size:15px; }
+        .essay-memory-block--intro { background:rgba(59,130,246,.10); border-left:4px solid #3b82f6; }
+        .essay-memory-block--body { background:rgba(16,185,129,.09); border-left:4px solid #10b981; }
+        .essay-memory-block--conclusion { background:rgba(245,158,11,.10); border-left:4px solid #f59e0b; }
+        .essay-memory-block .essay-paragraph:last-of-type { margin-bottom:0; }
+        .essay-sub-block { margin:10px 0; padding:12px; border-radius:6px; background:rgba(15,23,42,.38); }
+        .essay-sub-block-label { display:block; margin-bottom:7px; color:var(--text-muted); font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+        .template-section-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px; }
+        .template-section { padding:14px; border:1px solid var(--border); border-radius:7px; background:rgba(15,23,42,.35); }
+        .template-section h5 { margin:0 0 9px; color:var(--primary); }
+        .template-section ol { margin:0; padding-left:21px; }
+        .template-section li { margin:8px 0; line-height:1.6; }
         .tutorial-rule-grid .writing-rule { padding:12px; border:1px solid var(--border); border-radius:8px; }
         .tutorial-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
         .item-pager[hidden] { display:none !important; }
-        @media (max-width:600px) { .tutorial-rule-grid, .writing-memory-kit { grid-template-columns:1fr; } }
+        @media (max-width:600px) { .tutorial-rule-grid, .writing-memory-kit, .template-section-grid { grid-template-columns:1fr; } }
         #essay-word-tooltip { position:fixed; z-index:10000; width:max-content; max-width:min(380px,calc(100vw - 16px)); max-height:calc(100dvh - 16px); overflow-y:auto; padding:12px 16px; border:1px solid #10b981; border-radius:8px; background:#102c29; color:#fff; font-size:15px; line-height:1.7; box-shadow:0 4px 18px #0006; overflow-wrap:anywhere; pointer-events:none; }
         #essay-word-tooltip[hidden] { display:none; }
         .essay-full-translation { margin:-8px 0 24px; }
@@ -10045,10 +10058,25 @@ const writingDrafts = {};
             const esc = essayEscape;
             const mechanism = coach.steps.map((step, index) => '<li><strong>' + ['ประเด็น', 'เหตุผล / HOW', 'ตัวอย่าง', 'ผลลัพธ์'][index] + ':</strong> ' + esc(step[1]) + '</li>').join('');
             const outline = [
-                'Introduction: Nowadays, [topic] has become an important issue in our society. In my opinion, I believe that [position].',
-                'Body 1: First, [reason 1]. This is because [HOW]. For example, [example]. As a result, [result].',
-                'Body 2: Second, [reason 2]. This is because [HOW]. For example, [example]. Therefore, [result].',
-                'Conclusion: In conclusion, I believe that [position]. This is because [reason 1] and [reason 2]. However, [condition].'
+                'Nowadays, [topic] has become an increasingly important issue in our society.',
+                'Many people believe that it has both advantages and disadvantages in daily life.',
+                'Some people believe that it has positive effects because [reason 1] and [reason 2], while others believe that it has negative effects.',
+                'In my opinion, I believe that its benefits for individuals and society outweigh its drawbacks.',
+                'First, [reason 1].',
+                'This is because [explain HOW it works].',
+                'For example, [specific example]. As a result, [outcome linked to the question].',
+                'Second, [reason 2].',
+                'This is because [explain HOW it works].',
+                'For example, [specific example]. Therefore, [outcome linked to the question].',
+                'In conclusion, I believe that [topic] is beneficial or necessary in daily life.',
+                'This is because it provides [reason 1] and [reason 2].',
+                'However, it should be used or managed carefully to reduce its negative effects.'
+            ];
+            const templateSections = [
+                ['INTRODUCTION · 1–4', outline.slice(0, 4)],
+                ['BODY 1 · 5–7', outline.slice(4, 7)],
+                ['BODY 2 · 8–10', outline.slice(7, 10)],
+                ['CONCLUSION · 11–13', outline.slice(10, 13)]
             ];
             return '<section class="writing-tutorial" lang="th">' +
                 '<h3>Writing Tutorial · เข้าใจโจทย์ก่อนเขียน</h3>' +
@@ -10057,7 +10085,7 @@ const writingDrafts = {};
                 '<div class="tutorial-step"><div class="tutorial-step-number">1</div><div><h4>WHAT IS THE QUESTION ASKING?</h4><p lang="en">' + renderWritingWords(item.prompt) + '</p><p><strong>โจทย์ต้องการ:</strong> ' + esc(coach.task) + '</p><p>อย่าพูดแค่เรื่องกว้าง ๆ ต้องตอบคำถามนี้โดยตรง</p></div></div>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">2</div><div><h4>HOW IT WORKS</h4><p>คิดเป็นลำดับว่าเหตุผลส่งผลอย่างไร ไม่ใช่บอกความเห็นลอย ๆ</p><ol>' + mechanism + '</ol></div></div>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">3</div><div><h4>CHOOSE YOUR POSITION</h4><p><strong>มุมสนับสนุน:</strong> ' + esc(coach.steps[0][1]) + '</p><p><strong>มุมที่ต้องระวัง / คัดค้าน:</strong> พิจารณาข้อจำกัด ผลกระทบ หรือเงื่อนไขที่ทำให้แนวคิดนี้ใช้ไม่ได้เสมอไป</p><p>เลือกจุดยืนที่ตอบโจทย์ตรงที่สุด แล้วให้ทั้งสอง Body สนับสนุนจุดยืนนั้น</p></div></div>' +
-                '<div class="tutorial-step"><div class="tutorial-step-number">4</div><div><h4>FOUR-PARAGRAPH OUTLINE</h4><p>ชนิดโจทย์: <strong>' + esc(profile.label || 'Essay') + '</strong></p><ol>' + outline.map(line => '<li lang="en">' + renderWritingWords(line) + '</li>').join('') + '</ol></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">4</div><div><h4>13-SENTENCE MEMORIZATION TEMPLATE</h4><p>ชนิดโจทย์: <strong>' + esc(profile.label || 'Essay') + '</strong> · จำตามลำดับนี้ แล้วเปลี่ยนเฉพาะ [topic], เหตุผล และตัวอย่าง</p><div class="template-section-grid">' + templateSections.map(section => '<section class="template-section"><h5>' + section[0] + '</h5><ol>' + section[1].map(line => '<li lang="en">' + renderWritingWords(line) + '</li>').join('') + '</ol></section>').join('') + '</div></div></div>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">5</div><div><h4>OFF-TOPIC WARNING</h4><p><strong>Off-topic:</strong> พูดเรื่อง ' + esc(item.title) + ' แบบทั่วไป แต่ไม่ตอบสิ่งที่โจทย์สั่ง</p><p><strong>On-topic:</strong> ใช้เหตุผลว่า “' + esc(coach.steps[0][1]) + '” แล้วอธิบาย HOW → Example → Result ให้เชื่อมกลับมาที่คำถาม</p></div></div>' +
                 '<div class="tutorial-actions"><button type="button" class="btn btn-outline" onclick="setMode(\'writing\', \'review\')">Review: ศัพท์และตัวอย่าง</button><button type="button" class="btn" onclick="setMode(\'writing\', \'test\')">Practice: เริ่มเขียน</button></div>' +
                 '<p class="writing-coach-source">ใช้ Pattern เดียวกันทุกหัวข้อ: Question → Understand → Mechanism → Position → Outline → Practice → Review</p></section>';
@@ -10074,13 +10102,29 @@ const writingDrafts = {};
             ];
             const wordCount = text => text.trim().split(/\s+/).filter(Boolean).length;
             const conclusionIndex = paragraphs.findIndex(paragraph => /^(In conclusion|To sum up|To conclude|Overall|In summary)\b/i.test(paragraph.trim()));
-            const insertAt = conclusionIndex === -1 ? paragraphs.length : conclusionIndex;
+            const lastBodyIndex = conclusionIndex === -1 ? paragraphs.length - 1 : Math.max(1, conclusionIndex - 1);
+            const firstBodyIndex = Math.min(1, lastBodyIndex);
             let additionIndex = 0;
             while (wordCount(paragraphs.join('\n\n')) < 350 && additionIndex < additions.length) {
-                paragraphs.splice(insertAt + additionIndex, 0, additions[additionIndex]);
+                const targetBodyIndex = additionIndex % 2 === 0 ? firstBodyIndex : lastBodyIndex;
+                paragraphs[targetBodyIndex] += ' ' + additions[additionIndex];
                 additionIndex++;
             }
             return paragraphs.join('\n\n');
+        }
+
+        function renderWritingSampleBlocks(item, sample) {
+            const paragraphs = sample.split(/\n\s*\n/).filter(Boolean);
+            const translation = ESSAY_PARAGRAPHS_TH[item.id] || [];
+            const paragraphHtml = (paragraph, index, label) => '<div class="essay-sub-block"><span class="essay-sub-block-label">' + label + '</span><p class="essay-paragraph">' + renderWritingWords(paragraph) + '</p>' +
+                (translation[index] ? '<details class="essay-full-translation"><summary>คำแปลทั้งย่อหน้า ' + (index + 1) + '</summary><p lang="th">' + essayEscape(translation[index]) + '</p></details>' : '') + '</div>';
+            const groups = [
+                ['essay-memory-block--intro', '1. INTRO / POSITION', paragraphs.slice(0, 1), 0, ['Opening + Position']],
+                ['essay-memory-block--body', '2. REASONS & EXAMPLES', paragraphs.slice(1, -1), 1, ['Body 1 · First reason', 'Body 2 · Second reason']],
+                ['essay-memory-block--conclusion', '3. CONCLUSION', paragraphs.slice(-1), Math.max(0, paragraphs.length - 1), ['Restate + Condition']]
+            ];
+            return groups.map(group => '<section class="essay-memory-block ' + group[0] + '"><h5>' + group[1] + '</h5>' +
+                group[2].map((paragraph, index) => paragraphHtml(paragraph, group[3] + index, group[4][index] || 'Supporting idea')).join('') + '</section>').join('');
         }
 
         function exportWritingPdf() {
@@ -10198,7 +10242,7 @@ const writingDrafts = {};
                     const examSample = buildExamLengthSample(item);
                     const sampleItem = { ...item, sample_essay: examSample };
                     html += `<h4 style="margin: 15px 0 10px;">Sample Answer · ${examSample.trim().split(/\s+/).length} words</h4>
-                    <div class="passage-text" style="max-height: none;">${renderEssayTranslation(sampleItem)}</div>`;
+                    <div class="passage-text" style="max-height: none;">${renderWritingSampleBlocks(sampleItem, examSample)}</div>`;
                 }
                 
             } else {
