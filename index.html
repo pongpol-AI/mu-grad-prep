@@ -10038,19 +10038,45 @@ const writingDrafts = {};
                 '<p class="writing-coach-source">สรุปและเรียบเรียงจาก Writing MU practice.pdf หน้า 1–9; ใช้เป็นแนวทางฝึก ไม่ใช่เกณฑ์คะแนนอย่างเป็นทางการ</p></section>';
         }
 
+        function renderWritingTutorial() {
+            const item = DB.writing[state.writing.index];
+            const coach = WRITING_ANSWER_COACH[item.id];
+            const profile = WRITING_TASK_PROFILES[coach.type] || {};
+            const esc = essayEscape;
+            const mechanism = coach.steps.map((step, index) => '<li><strong>' + ['ประเด็น', 'เหตุผล / HOW', 'ตัวอย่าง', 'ผลลัพธ์'][index] + ':</strong> ' + esc(step[1]) + '</li>').join('');
+            const outline = [
+                'Introduction: Nowadays, [topic] has become an important issue in our society. In my opinion, I believe that [position].',
+                'Body 1: First, [reason 1]. This is because [HOW]. For example, [example]. As a result, [result].',
+                'Body 2: Second, [reason 2]. This is because [HOW]. For example, [example]. Therefore, [result].',
+                'Conclusion: In conclusion, I believe that [position]. This is because [reason 1] and [reason 2]. However, [condition].'
+            ];
+            return '<section class="writing-tutorial" lang="th">' +
+                '<h3>Writing Tutorial · เข้าใจโจทย์ก่อนเขียน</h3>' +
+                '<label for="writing-tutorial-topic-select">เลือกหัวข้อที่จะใช้ฝึก</label><select id="writing-tutorial-topic-select" class="page-select" style="width:100%; margin:8px 0 12px;" onchange="goToItem(\'writing\', this.value)">' +
+                DB.writing.map((topic, index) => '<option value="' + index + '"' + (index === state.writing.index ? ' selected' : '') + '>Topic ' + (index + 1) + ': ' + esc(topic.title) + '</option>').join('') + '</select>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">1</div><div><h4>WHAT IS THE QUESTION ASKING?</h4><p lang="en">' + renderWritingWords(item.prompt) + '</p><p><strong>โจทย์ต้องการ:</strong> ' + esc(coach.task) + '</p><p>อย่าพูดแค่เรื่องกว้าง ๆ ต้องตอบคำถามนี้โดยตรง</p></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">2</div><div><h4>HOW IT WORKS</h4><p>คิดเป็นลำดับว่าเหตุผลส่งผลอย่างไร ไม่ใช่บอกความเห็นลอย ๆ</p><ol>' + mechanism + '</ol></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">3</div><div><h4>CHOOSE YOUR POSITION</h4><p><strong>มุมสนับสนุน:</strong> ' + esc(coach.steps[0][1]) + '</p><p><strong>มุมที่ต้องระวัง / คัดค้าน:</strong> พิจารณาข้อจำกัด ผลกระทบ หรือเงื่อนไขที่ทำให้แนวคิดนี้ใช้ไม่ได้เสมอไป</p><p>เลือกจุดยืนที่ตอบโจทย์ตรงที่สุด แล้วให้ทั้งสอง Body สนับสนุนจุดยืนนั้น</p></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">4</div><div><h4>FOUR-PARAGRAPH OUTLINE</h4><p>ชนิดโจทย์: <strong>' + esc(profile.label || 'Essay') + '</strong></p><ol>' + outline.map(line => '<li lang="en">' + renderWritingWords(line) + '</li>').join('') + '</ol></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">5</div><div><h4>OFF-TOPIC WARNING</h4><p><strong>Off-topic:</strong> พูดเรื่อง ' + esc(item.title) + ' แบบทั่วไป แต่ไม่ตอบสิ่งที่โจทย์สั่ง</p><p><strong>On-topic:</strong> ใช้เหตุผลว่า “' + esc(coach.steps[0][1]) + '” แล้วอธิบาย HOW → Example → Result ให้เชื่อมกลับมาที่คำถาม</p></div></div>' +
+                '<div class="tutorial-actions"><button type="button" class="btn btn-outline" onclick="setMode(\'writing\', \'review\')">Review: ศัพท์และตัวอย่าง</button><button type="button" class="btn" onclick="setMode(\'writing\', \'test\')">Practice: เริ่มเขียน</button></div>' +
+                '<p class="writing-coach-source">ใช้ Pattern เดียวกันทุกหัวข้อ: Question → Understand → Mechanism → Position → Outline → Practice → Review</p></section>';
+        }
+
         function buildExamLengthSample(item) {
             const paragraphs = item.sample_essay.trim().split(/\n\s*\n/).filter(Boolean);
             const additions = [
                 'Another important consideration is the long-term effect of this issue. People should consider how it influences daily decisions, available resources, and future opportunities. For example, an individual may need to compare reliable information before making a decision. This approach can prevent unnecessary problems and encourage more responsible behaviour.',
                 'A balanced approach is also necessary. Although this issue may offer some benefits, its possible limitations should not be ignored. Individuals and organisations can reduce risks by planning carefully and seeking appropriate support. Consequently, the positive effects are more likely to be shared fairly.',
                 'Furthermore, education and clear communication can improve the situation. When people understand both the benefits and the risks, they can make more informed choices. This is especially important for people who have limited experience or access to support. In this way, practical action can lead to better outcomes over time.',
-                'Governments, schools, and communities also have a role to play. They can provide reliable guidance and create conditions that help people make safe and realistic choices. Such support can make a meaningful difference in everyday life.'
+                'Governments, schools, and communities also have a role to play. They can provide reliable guidance and create conditions that help people make safe and realistic choices. Such support can make a meaningful difference in everyday life.',
+                'For this reason, people should not rely only on a simple solution. They should consider the evidence, the needs of those affected, and the possible result of each choice before taking action.'
             ];
             const wordCount = text => text.trim().split(/\s+/).filter(Boolean).length;
             const conclusionIndex = paragraphs.findIndex(paragraph => /^(In conclusion|To sum up|To conclude|Overall|In summary)\b/i.test(paragraph.trim()));
             const insertAt = conclusionIndex === -1 ? paragraphs.length : conclusionIndex;
             let additionIndex = 0;
-            while (wordCount(paragraphs.join('\n\n')) < 330 && additionIndex < additions.length) {
+            while (wordCount(paragraphs.join('\n\n')) < 350 && additionIndex < additions.length) {
                 paragraphs.splice(insertAt + additionIndex, 0, additions[additionIndex]);
                 additionIndex++;
             }
