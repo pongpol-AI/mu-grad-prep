@@ -227,6 +227,41 @@
         p { font-size: 15px; color: var(--text-muted); margin-bottom: 15px; }
 
         /* Buttons */
+        #vocabulary-sprint .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin: 16px 0 20px;
+        }
+        #vocabulary-sprint .option-btn {
+            display: flex;
+            align-items: center;
+            min-height: 68px;
+            padding: 15px 17px;
+            border: 1px solid rgba(96,165,250,.36);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(30,41,59,.98), rgba(30,58,95,.76));
+            color: #f8fafc;
+            font: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            box-shadow: 0 7px 16px rgba(0,0,0,.18);
+            transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+        }
+        #vocabulary-sprint .option-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            border-color: #60a5fa;
+            background: linear-gradient(145deg, rgba(37,99,235,.48), rgba(59,130,246,.2));
+            box-shadow: 0 12px 22px rgba(37,99,235,.22);
+        }
+        #vocabulary-sprint .option-btn:active:not(:disabled) { transform: translateY(0) scale(.98); }
+        #vocabulary-sprint .option-btn.correct { border-color:#34d399; background:rgba(6,95,70,.56); color:#d1fae5; }
+        #vocabulary-sprint .option-btn.wrong { border-color:#fb7185; background:rgba(136,19,55,.44); color:#ffe4e6; }
+        #vocabulary-sprint .option-btn:disabled { cursor:default; opacity:.72; }
+        #vocabulary-sprint .choice-letter { display:inline-grid; place-items:center; width:28px; height:28px; margin-right:11px; border-radius:50%; background:rgba(96,165,250,.2); color:#93c5fd; font-size:13px; }
+        @media (max-width: 620px) { #vocabulary-sprint .options-grid { grid-template-columns:1fr; } }
         .btn {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
@@ -8695,7 +8730,7 @@
             const card = cards[vocabularySprintIndex % cards.length];
             vocabularyAnswered = false;
             vocabularyChoices = [card.th, ...VOCABULARY_SPRINT.filter(item => item.th !== card.th).sort(() => Math.random() - .5).slice(0, 3).map(item => item.th)].sort(() => Math.random() - .5);
-            container.innerHTML = '<div class="mode-tabs" style="margin:16px 0;"><button class="mode-tab ' + (vocabularyLevel === 'All' ? 'active' : '') + '" onclick="setVocabularyLevel(\'All\')">All · 90 words</button>' + Object.keys(VOCABULARY_SETS).map(level => '<button class="mode-tab ' + (vocabularyLevel === level ? 'active' : '') + '" onclick="setVocabularyLevel(\'' + level + '\')">' + level + '</button>').join('') + '</div><div class="question-card"><p style="color:var(--text-muted);">' + card.level + ' · Word ' + (vocabularySprintIndex % cards.length + 1) + ' of ' + cards.length + ' · Score ' + vocabularyScore.correct + '/' + vocabularyScore.attempts + '</p><h2 style="font-size:34px;color:var(--accent);margin:8px 0;">' + card.word + '</h2><p lang="en"><em>' + card.example + '</em></p><hr style="border-color:var(--border);margin:20px 0;"><h3 style="font-size:17px;">เดาความหมายภาษาไทย</h3><div class="options-grid">' + vocabularyChoices.map((option, index) => '<button type="button" class="option-btn" onclick="answerVocabularySprint(' + index + ')">' + option + '</button>').join('') + '</div><p id="vocabulary-feedback" aria-live="polite" style="min-height:24px;margin-top:16px;"></p><button type="button" class="btn btn-outline" onclick="nextVocabularySprint()">คำถัดไป →</button></div>';
+            container.innerHTML = '<div class="mode-tabs" style="margin:16px 0;"><button class="mode-tab ' + (vocabularyLevel === 'All' ? 'active' : '') + '" onclick="setVocabularyLevel(\'All\')">All · 90 words</button>' + Object.keys(VOCABULARY_SETS).map(level => '<button class="mode-tab ' + (vocabularyLevel === level ? 'active' : '') + '" onclick="setVocabularyLevel(\'' + level + '\')">' + level + '</button>').join('') + '</div><div class="question-card"><p style="color:var(--text-muted);">' + card.level + ' · Word ' + (vocabularySprintIndex % cards.length + 1) + ' of ' + cards.length + ' · Score ' + vocabularyScore.correct + '/' + vocabularyScore.attempts + '</p><h2 style="font-size:34px;color:var(--accent);margin:8px 0;">' + card.word + '</h2><p lang="en"><em>' + card.example + '</em></p><hr style="border-color:var(--border);margin:20px 0;"><h3 style="font-size:17px;">เดาความหมายภาษาไทย</h3><div class="options-grid">' + vocabularyChoices.map((option, index) => '<button type="button" class="option-btn" onclick="answerVocabularySprint(' + index + ')"><span class="choice-letter">' + String.fromCharCode(65 + index) + '</span>' + option + '</button>').join('') + '</div><p id="vocabulary-feedback" aria-live="polite" style="min-height:24px;margin-top:16px;"></p><button type="button" class="btn btn-outline" onclick="nextVocabularySprint()">คำถัดไป →</button></div>';
         }
         function answerVocabularySprint(optionIndex) {
             if (vocabularyAnswered) return;
@@ -8706,7 +8741,11 @@
             if (!feedback) return;
             vocabularyScore.attempts++;
             if (vocabularyChoices[optionIndex] === card.th) vocabularyScore.correct++;
-            document.querySelectorAll('#vocabulary-sprint .option-btn').forEach(button => button.disabled = true);
+            document.querySelectorAll('#vocabulary-sprint .option-btn').forEach((button, index) => {
+                button.disabled = true;
+                if (vocabularyChoices[index] === card.th) button.classList.add('correct');
+                else if (index === optionIndex) button.classList.add('wrong');
+            });
             feedback.innerHTML = vocabularyChoices[optionIndex] === card.th ? '<strong style="color:#34d399;">ถูกต้อง ✓</strong> ' + card.word + ' = ' + card.th : '<strong style="color:#f87171;">ยังไม่ใช่</strong> คำตอบคือ <strong>' + card.th + '</strong>';
         }
         function nextVocabularySprint() {
