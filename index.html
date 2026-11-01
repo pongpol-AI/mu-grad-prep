@@ -925,7 +925,20 @@
                         <h3>Writing</h3>
                         <p id="writing-topic-count" style="font-size: 12px; margin: 0;">22 Topics</p>
                     </div>
+                    <button type="button" class="subject-card" onclick="switchTab('vocabulary');renderVocabularySprint()" style="font:inherit;color:inherit;text-align:center;">
+                        <div class="subject-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H4V4zm16 0h-7a3 3 0 0 0-3 3v13a3 3 0 0 1 3-3h7V4z"/></svg></div>
+                        <h3>Vocabulary Sprint</h3>
+                        <p style="font-size:12px;margin:0;">Easy words · 3-minute drill</p>
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <div id="tab-vocabulary" class="tab-content">
+            <div class="glass-card" style="max-width:900px;margin:auto;">
+                <h2>Vocabulary Sprint</h2>
+                <p>จำศัพท์พื้นฐานที่ใช้บ่อยในข้อสอบทีละคำ: ดูความหมาย → อ่านตัวอย่าง → เลือกคำแปล</p>
+                <div id="vocabulary-sprint"></div>
             </div>
         </div>
 
@@ -8660,6 +8673,48 @@
                 </div>
             `;
         }
+
+        const VOCABULARY_SETS = {
+            'Level 1 · Foundation': 'necessary|จำเป็น;important|สำคัญ;benefit|ประโยชน์;problem|ปัญหา;reason|เหตุผล;result|ผลลัพธ์;example|ตัวอย่าง;improve|พัฒนา / ทำให้ดีขึ้น;reduce|ลด / ทำให้ลดลง;increase|เพิ่ม / เพิ่มขึ้น;protect|ปกป้อง;prevent|ป้องกัน;support|สนับสนุน;affect|ส่งผลกระทบ;provide|จัดหา / มอบให้;require|ต้องการ / จำเป็นต้อง;allow|อนุญาต;choose|เลือก;compare|เปรียบเทียบ;consider|พิจารณา;however|อย่างไรก็ตาม;therefore|ดังนั้น;because|เพราะว่า;although|แม้ว่า;while|ในขณะที่;instead|แทนที่จะ;especially|โดยเฉพาะ;probably|น่าจะ;possible|เป็นไปได้;different|แตกต่าง',
+            'Level 2 · Exam Builder': 'advantage|ข้อดี;disadvantage|ข้อเสีย;solution|วิธีแก้ปัญหา;opportunity|โอกาส;challenge|ความท้าทาย;influence|มีอิทธิพลต่อ;responsible|มีความรับผิดชอบ;reliable|น่าเชื่อถือ;effective|มีประสิทธิภาพ;essential|จำเป็นอย่างยิ่ง;significant|สำคัญมาก / มีนัยสำคัญ;available|มีอยู่ / พร้อมใช้;individual|บุคคล;community|ชุมชน;society|สังคม;environment|สิ่งแวดล้อม;education|การศึกษา;employment|การจ้างงาน;behaviour|พฤติกรรม;decision|การตัดสินใจ;convenient|สะดวก;expensive|มีราคาแพง;valuable|มีคุณค่า;harmful|เป็นอันตราย;positive|เชิงบวก;negative|เชิงลบ;likely|มีแนวโน้ม;unlikely|ไม่น่าจะ;instead of|แทนที่จะ;as a result|ผลก็คือ / ส่งผลให้',
+            'Level 3 · Academic Writing': 'consequently|ดังนั้น / ผลที่ตามมาคือ;furthermore|นอกจากนี้;nevertheless|อย่างไรก็ตาม;in contrast|ในทางตรงกันข้าม;for instance|ตัวอย่างเช่น;in conclusion|โดยสรุป;from my perspective|จากมุมมองของฉัน;outweigh|มีมากกว่า / เหนือกว่า;contribute to|มีส่วนช่วย;lead to|นำไปสู่;rely on|พึ่งพา;deal with|รับมือกับ;be aware of|ตระหนักถึง;be responsible for|รับผิดชอบต่อ;have access to|เข้าถึงได้;play a role|มีบทบาท;take action|ลงมือดำเนินการ;make informed choices|ตัดสินใจโดยมีข้อมูล;long-term|ระยะยาว;short-term|ระยะสั้น;privacy|ความเป็นส่วนตัว;security|ความปลอดภัย;misuse|การใช้ผิดวัตถุประสงค์;inequality|ความไม่เท่าเทียม;awareness|ความตระหนัก;consequence|ผลตามมา;limitation|ข้อจำกัด;priority|ลำดับความสำคัญ;maintain|รักษาไว้;encourage|ส่งเสริม'
+        };
+        const VOCABULARY_SPRINT = Object.entries(VOCABULARY_SETS).flatMap(([level, words]) => words.split(';').map(entry => {
+            const [word, th] = entry.split('|');
+            return { level, word, th, example: 'Use “' + word + '” when you want to express this idea in an essay.' };
+        }));
+        let vocabularySprintIndex = 0;
+        let vocabularyLevel = 'All';
+        let vocabularyChoices = [];
+        let vocabularyScore = { correct: 0, attempts: 0 };
+        let vocabularyAnswered = false;
+        function renderVocabularySprint() {
+            const container = document.getElementById('vocabulary-sprint');
+            if (!container) return;
+            const cards = vocabularyLevel === 'All' ? VOCABULARY_SPRINT : VOCABULARY_SPRINT.filter(item => item.level === vocabularyLevel);
+            const card = cards[vocabularySprintIndex % cards.length];
+            vocabularyAnswered = false;
+            vocabularyChoices = [card.th, ...VOCABULARY_SPRINT.filter(item => item.th !== card.th).sort(() => Math.random() - .5).slice(0, 3).map(item => item.th)].sort(() => Math.random() - .5);
+            container.innerHTML = '<div class="mode-tabs" style="margin:16px 0;"><button class="mode-tab ' + (vocabularyLevel === 'All' ? 'active' : '') + '" onclick="setVocabularyLevel(\'All\')">All · 90 words</button>' + Object.keys(VOCABULARY_SETS).map(level => '<button class="mode-tab ' + (vocabularyLevel === level ? 'active' : '') + '" onclick="setVocabularyLevel(\'' + level + '\')">' + level + '</button>').join('') + '</div><div class="question-card"><p style="color:var(--text-muted);">' + card.level + ' · Word ' + (vocabularySprintIndex % cards.length + 1) + ' of ' + cards.length + ' · Score ' + vocabularyScore.correct + '/' + vocabularyScore.attempts + '</p><h2 style="font-size:34px;color:var(--accent);margin:8px 0;">' + card.word + '</h2><p lang="en"><em>' + card.example + '</em></p><hr style="border-color:var(--border);margin:20px 0;"><h3 style="font-size:17px;">เดาความหมายภาษาไทย</h3><div class="options-grid">' + vocabularyChoices.map((option, index) => '<button type="button" class="option-btn" onclick="answerVocabularySprint(' + index + ')">' + option + '</button>').join('') + '</div><p id="vocabulary-feedback" aria-live="polite" style="min-height:24px;margin-top:16px;"></p><button type="button" class="btn btn-outline" onclick="nextVocabularySprint()">คำถัดไป →</button></div>';
+        }
+        function answerVocabularySprint(optionIndex) {
+            if (vocabularyAnswered) return;
+            vocabularyAnswered = true;
+            const cards = vocabularyLevel === 'All' ? VOCABULARY_SPRINT : VOCABULARY_SPRINT.filter(item => item.level === vocabularyLevel);
+            const card = cards[vocabularySprintIndex % cards.length];
+            const feedback = document.getElementById('vocabulary-feedback');
+            if (!feedback) return;
+            vocabularyScore.attempts++;
+            if (vocabularyChoices[optionIndex] === card.th) vocabularyScore.correct++;
+            document.querySelectorAll('#vocabulary-sprint .option-btn').forEach(button => button.disabled = true);
+            feedback.innerHTML = vocabularyChoices[optionIndex] === card.th ? '<strong style="color:#34d399;">ถูกต้อง ✓</strong> ' + card.word + ' = ' + card.th : '<strong style="color:#f87171;">ยังไม่ใช่</strong> คำตอบคือ <strong>' + card.th + '</strong>';
+        }
+        function nextVocabularySprint() {
+            const cards = vocabularyLevel === 'All' ? VOCABULARY_SPRINT : VOCABULARY_SPRINT.filter(item => item.level === vocabularyLevel);
+            vocabularySprintIndex = (vocabularySprintIndex + 1) % cards.length;
+            renderVocabularySprint();
+        }
+        function setVocabularyLevel(level) { vocabularyLevel = level; vocabularySprintIndex = 0; renderVocabularySprint(); }
         
         function switchTab(tabId) {
             hideEssayWord();
