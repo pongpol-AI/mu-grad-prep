@@ -757,6 +757,9 @@
         .template-section h5 { margin:0 0 9px; color:var(--primary); }
         .template-section ol { margin:0; padding-left:21px; }
         .template-section li { margin:8px 0; line-height:1.6; }
+        .template-sentence { margin:9px 0; padding:10px; border-radius:6px; background:rgba(15,23,42,.38); }
+        .template-hint { display:block; margin-bottom:5px; color:var(--accent); font-size:12px; font-weight:700; }
+        .template-sentence p { margin:0; line-height:1.65; }
         .tutorial-rule-grid .writing-rule { padding:12px; border:1px solid var(--border); border-radius:8px; }
         .tutorial-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
         .item-pager[hidden] { display:none !important; }
@@ -10073,10 +10076,10 @@ const writingDrafts = {};
                 'However, it should be used or managed carefully to reduce its negative effects.'
             ];
             const templateSections = [
-                ['INTRODUCTION · 1–4', outline.slice(0, 4)],
-                ['BODY 1 · 5–7', outline.slice(4, 7)],
-                ['BODY 2 · 8–10', outline.slice(7, 10)],
-                ['CONCLUSION · 11–13', outline.slice(10, 13)]
+                ['Paragraph 1 — Introduction', [['1. Topic', outline[0]], ['2. Background', outline[1]], ['3. Two Views', outline[2]], ['4. Opinion', outline[3]]]],
+                ['Paragraph 2 — Body 1', [['5. Reason 1', outline[4]], ['6. Explain HOW', outline[5]], ['7. Example + Result', outline[6]]]],
+                ['Paragraph 3 — Body 2', [['8. Reason 2', outline[7]], ['9. Explain HOW', outline[8]], ['10. Example + Result', outline[9]]]],
+                ['Paragraph 4 — Conclusion', [['11. Restate Opinion', outline[10]], ['12. Summary Reasons', outline[11]], ['13. However / Condition', outline[12]]]]
             ];
             return '<section class="writing-tutorial" lang="th">' +
                 '<h3>Writing Tutorial · เข้าใจโจทย์ก่อนเขียน</h3>' +
@@ -10085,7 +10088,7 @@ const writingDrafts = {};
                 '<div class="tutorial-step"><div class="tutorial-step-number">1</div><div><h4>WHAT IS THE QUESTION ASKING?</h4><p lang="en">' + renderWritingWords(item.prompt) + '</p><p><strong>โจทย์ต้องการ:</strong> ' + esc(coach.task) + '</p><p>อย่าพูดแค่เรื่องกว้าง ๆ ต้องตอบคำถามนี้โดยตรง</p></div></div>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">2</div><div><h4>HOW IT WORKS</h4><p>คิดเป็นลำดับว่าเหตุผลส่งผลอย่างไร ไม่ใช่บอกความเห็นลอย ๆ</p><ol>' + mechanism + '</ol></div></div>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">3</div><div><h4>CHOOSE YOUR POSITION</h4><p><strong>มุมสนับสนุน:</strong> ' + esc(coach.steps[0][1]) + '</p><p><strong>มุมที่ต้องระวัง / คัดค้าน:</strong> พิจารณาข้อจำกัด ผลกระทบ หรือเงื่อนไขที่ทำให้แนวคิดนี้ใช้ไม่ได้เสมอไป</p><p>เลือกจุดยืนที่ตอบโจทย์ตรงที่สุด แล้วให้ทั้งสอง Body สนับสนุนจุดยืนนั้น</p></div></div>' +
-                '<div class="tutorial-step"><div class="tutorial-step-number">4</div><div><h4>13-SENTENCE MEMORIZATION TEMPLATE</h4><p>ชนิดโจทย์: <strong>' + esc(profile.label || 'Essay') + '</strong> · จำตามลำดับนี้ แล้วเปลี่ยนเฉพาะ [topic], เหตุผล และตัวอย่าง</p><div class="template-section-grid">' + templateSections.map(section => '<section class="template-section"><h5>' + section[0] + '</h5><ol>' + section[1].map(line => '<li lang="en">' + renderWritingWords(line) + '</li>').join('') + '</ol></section>').join('') + '</div></div></div>' +
+                '<div class="tutorial-step"><div class="tutorial-step-number">4</div><div><h4>13-SENTENCE MEMORIZATION TEMPLATE</h4><p>ชนิดโจทย์: <strong>' + esc(profile.label || 'Essay') + '</strong> · เปลี่ยนเฉพาะ [topic], เหตุผล และตัวอย่าง โดยรักษาลำดับประโยคเดิม</p><div class="template-section-grid">' + templateSections.map(section => '<section class="template-section"><h5>' + section[0] + '</h5>' + section[1].map(row => '<div class="template-sentence"><span class="template-hint">' + row[0] + '</span><p lang="en">' + renderWritingWords(row[1]) + '</p></div>').join('') + '</section>').join('') + '</div></div></div>' +
                 '<div class="tutorial-step"><div class="tutorial-step-number">5</div><div><h4>OFF-TOPIC WARNING</h4><p><strong>Off-topic:</strong> พูดเรื่อง ' + esc(item.title) + ' แบบทั่วไป แต่ไม่ตอบสิ่งที่โจทย์สั่ง</p><p><strong>On-topic:</strong> ใช้เหตุผลว่า “' + esc(coach.steps[0][1]) + '” แล้วอธิบาย HOW → Example → Result ให้เชื่อมกลับมาที่คำถาม</p></div></div>' +
                 '<div class="tutorial-actions"><button type="button" class="btn btn-outline" onclick="setMode(\'writing\', \'review\')">Review: ศัพท์และตัวอย่าง</button><button type="button" class="btn" onclick="setMode(\'writing\', \'test\')">Practice: เริ่มเขียน</button></div>' +
                 '<p class="writing-coach-source">ใช้ Pattern เดียวกันทุกหัวข้อ: Question → Understand → Mechanism → Position → Outline → Practice → Review</p></section>';
