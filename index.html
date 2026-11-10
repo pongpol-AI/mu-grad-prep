@@ -8728,6 +8728,7 @@
         let vocabularyChoices = [];
         let vocabularyScore = { correct: 0, attempts: 0 };
         let vocabularyAnswered = false;
+        let vocabularyNextTimer = null;
         function renderVocabularySprint() {
             const container = document.getElementById('vocabulary-sprint');
             if (!container) return;
@@ -8735,7 +8736,7 @@
             const card = cards[vocabularySprintIndex % cards.length];
             vocabularyAnswered = false;
             vocabularyChoices = [card.th, ...VOCABULARY_SPRINT.filter(item => item.th !== card.th).sort(() => Math.random() - .5).slice(0, 3).map(item => item.th)].sort(() => Math.random() - .5);
-            container.innerHTML = '<div class="mode-tabs" style="margin:16px 0;"><button class="mode-tab ' + (vocabularyLevel === 'All' ? 'active' : '') + '" onclick="setVocabularyLevel(\'All\')">All · 90 words</button>' + Object.keys(VOCABULARY_SETS).map(level => '<button class="mode-tab ' + (vocabularyLevel === level ? 'active' : '') + '" onclick="setVocabularyLevel(\'' + level + '\')">' + level + '</button>').join('') + '</div><div class="question-card"><p style="color:var(--text-muted);">' + card.level + ' · Word ' + (vocabularySprintIndex % cards.length + 1) + ' of ' + cards.length + ' · Score ' + vocabularyScore.correct + '/' + vocabularyScore.attempts + '</p><h2 style="font-size:34px;color:var(--accent);margin:8px 0;">' + card.word + '</h2><p lang="en"><em>' + card.example + '</em></p><hr style="border-color:var(--border);margin:20px 0;"><h3 style="font-size:17px;">เดาความหมายภาษาไทย</h3><div class="options-grid">' + vocabularyChoices.map((option, index) => '<button type="button" class="option-btn" onclick="answerVocabularySprint(' + index + ')"><span class="choice-letter">' + String.fromCharCode(65 + index) + '</span>' + option + '</button>').join('') + '</div><p id="vocabulary-feedback" aria-live="polite" style="min-height:24px;margin-top:16px;"></p><button type="button" class="btn btn-outline" onclick="nextVocabularySprint()">คำถัดไป →</button></div>';
+            container.innerHTML = '<div class="mode-tabs" style="margin:16px 0;"><button class="mode-tab ' + (vocabularyLevel === 'All' ? 'active' : '') + '" onclick="setVocabularyLevel(\'All\')">All · 90 words</button>' + Object.keys(VOCABULARY_SETS).map(level => '<button class="mode-tab ' + (vocabularyLevel === level ? 'active' : '') + '" onclick="setVocabularyLevel(\'' + level + '\')">' + level + '</button>').join('') + '</div><div class="question-card"><p style="color:var(--text-muted);">' + card.level + ' · Word ' + (vocabularySprintIndex % cards.length + 1) + ' of ' + cards.length + ' · Score ' + vocabularyScore.correct + '/' + vocabularyScore.attempts + '</p><h2 style="font-size:34px;color:var(--accent);margin:8px 0;">' + card.word + '</h2><p lang="en"><em>' + card.example + '</em></p><hr style="border-color:var(--border);margin:20px 0;"><h3 style="font-size:17px;">เดาความหมายภาษาไทย</h3><div class="options-grid">' + vocabularyChoices.map((option, index) => '<button type="button" class="option-btn" onclick="answerVocabularySprint(' + index + ')"><span class="choice-letter">' + String.fromCharCode(65 + index) + '</span>' + option + '</button>').join('') + '</div><p id="vocabulary-feedback" aria-live="polite" style="min-height:24px;margin-top:16px;"></p><div style="display:flex;gap:10px;flex-wrap:wrap;"><button type="button" class="btn btn-outline" onclick="previousVocabularySprint()">← คำก่อนหน้า</button><button type="button" class="btn btn-outline" onclick="nextVocabularySprint()">ข้ามเป็นคำถัดไป →</button></div></div>';
         }
         function answerVocabularySprint(optionIndex) {
             if (vocabularyAnswered) return;
@@ -8752,10 +8753,18 @@
                 else if (index === optionIndex) button.classList.add('wrong');
             });
             feedback.innerHTML = vocabularyChoices[optionIndex] === card.th ? '<strong style="color:#34d399;">ถูกต้อง ✓</strong> ' + card.word + ' = ' + card.th : '<strong style="color:#f87171;">ยังไม่ใช่</strong> คำตอบคือ <strong>' + card.th + '</strong>';
+            vocabularyNextTimer = window.setTimeout(nextVocabularySprint, 950);
         }
         function nextVocabularySprint() {
+            if (vocabularyNextTimer) { window.clearTimeout(vocabularyNextTimer); vocabularyNextTimer = null; }
             const cards = vocabularyLevel === 'All' ? VOCABULARY_SPRINT : VOCABULARY_SPRINT.filter(item => item.level === vocabularyLevel);
             vocabularySprintIndex = (vocabularySprintIndex + 1) % cards.length;
+            renderVocabularySprint();
+        }
+        function previousVocabularySprint() {
+            if (vocabularyNextTimer) { window.clearTimeout(vocabularyNextTimer); vocabularyNextTimer = null; }
+            const cards = vocabularyLevel === 'All' ? VOCABULARY_SPRINT : VOCABULARY_SPRINT.filter(item => item.level === vocabularyLevel);
+            vocabularySprintIndex = (vocabularySprintIndex - 1 + cards.length) % cards.length;
             renderVocabularySprint();
         }
         function setVocabularyLevel(level) { vocabularyLevel = level; vocabularySprintIndex = 0; renderVocabularySprint(); }
